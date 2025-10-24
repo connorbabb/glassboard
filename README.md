@@ -9,3 +9,5 @@
 - Open tracking-snippet/index.html
 - Open frontend/index.html
 - Click buttons and watch it show up on the tracker.
+- Uses fastAPI with Python for backend. PostreSQL in AWS RDS for database. React for Frontend.
+- React + FastAPI + PostgreSQL.
