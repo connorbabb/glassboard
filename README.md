@@ -1,5 +1,8 @@
 # Glassboard
 
+Notes:
+- Eventually I'll need to replace allow_origins=["*"] with allow_origins=["https://myglassboard.com"] or something similar. The asterisk allows all sites which is a security hole and bad for production.
+
 10/1/25 - Created Project
 
 10/22/25 - Instructions to Run
