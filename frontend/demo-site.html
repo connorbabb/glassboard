@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glassboard Demo Site</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    button, a { margin: 0.5rem; padding: 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Glassboard Demo Site</h1>
+  <p>Click the buttons or links below to generate tracking events:</p>
+
+  <!-- Simulated user interactions -->
+  <button id="signup">Sign Up</button>
+  <button id="buy">Buy Now</button>
+  <button id="subscribe">Subscribe</button>
+  <a href="#">Learn More</a>
+  <a href="#">Contact Us</a>
+
+  <hr>
+  <p><strong>Tip:</strong> Replace <code>demo123</code> with your unique site ID if testing multiple clients.</p>
+
+  <!-- Embeddable tracking snippet -->
+  <script src="http://127.0.0.1:8000/snippet/demo123.js"></script>
+
+  <script>
+    // Optional: Add some extra click tracking to simulate events dynamically
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => btn.addEventListener('click', () => {
+      console.log(`Button clicked: ${btn.textContent}`);
+    }));
+
+    const links = document.querySelectorAll('a');
+    links.forEach(link => link.addEventListener('click', (e) => {
+      e.preventDefault(); // Prevent actual navigation for testing
+      console.log(`Link clicked: ${link.textContent}`);
+    }));
+  </script>
+</body>
+</html>

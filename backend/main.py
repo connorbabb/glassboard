@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import events, stats
+from .routers import events, stats, snippet
 from .models import Base
 from .database import engine
 
@@ -22,6 +22,7 @@ app.add_middleware(
 # Include routers
 app.include_router(events.router)
 app.include_router(stats.router)
+app.include_router(snippet.router)
 
 # Optional root route to avoid 404 at "/"
 @app.get("/")

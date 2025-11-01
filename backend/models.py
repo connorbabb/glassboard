@@ -10,4 +10,4 @@ class Event(Base):
     page = Column(String)
     element = Column(String)
     event_type = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=datetime.utcnow)
