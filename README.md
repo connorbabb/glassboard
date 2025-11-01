@@ -44,6 +44,7 @@ A lightweight analytics dashboard for small businesses to track website events s
 - `pip` installed
 - Optional: PostgreSQL or AWS RDS for production
 - Browser for testing frontend HTML pages
+- Clone glassboard repository
 
 **Project Structure**
 ```
