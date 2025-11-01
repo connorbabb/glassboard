@@ -52,14 +52,21 @@ glassboard/
 │ ├── main.py
 │ ├── models.py
 │ ├── database.py
+│ ├── schemas.py
 │ ├── routers/
 │ │ ├── events.py
+│ │ ├── __init__.py
+│ │ ├── snippet.py
 │ │ └── stats.py
+├── database/
+│ ├── events.db
+│ └── schemas.sql
 ├── frontend/
 │ ├── index.html # Dashboard page
 │ ├── dashboard.js # JS for fetching stats and updating UI
-│ └── test.html # Test page for the snippet
+│ └── demo-site.html # Test page for the snippet
 ├── README.md
+├── .gitignore
 └── requirements.txt
 ```
 
