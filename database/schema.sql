@@ -1,3 +1,7 @@
+-- Not in use, kept only for reference.
+-- Current app uses SQLite (to be migrated to PostgreSQL on AWS RDS).
+
+
 -- MySQL Workbench Forward Engineering
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;

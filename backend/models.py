@@ -9,5 +9,7 @@ class Event(Base):
     site_id = Column(String, index=True)
     page = Column(String)
     element = Column(String)
+    text = Column(String)                # 👈 new field for button/link text
+    href = Column(String, nullable=True) # 👈 optional link target (if any)
     event_type = Column(String)
     timestamp = Column(DateTime(timezone=True), default=datetime.utcnow)

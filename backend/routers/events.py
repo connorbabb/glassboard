@@ -1,37 +1,42 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from .. import models, schemas
 from ..database import get_db
+from ..models import Event
 from datetime import datetime
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
-@router.delete("/reset")
-def reset_events(db: Session = Depends(get_db)):
-    deleted = db.query(models.Event).delete()
-    db.commit()
-    return {"status": "ok", "deleted_rows": deleted}
-
-from datetime import datetime
-
 @router.post("/")
-def create_event(payload: schemas.EventCreate, db: Session = Depends(get_db)):
-    print("Received batch:", payload.dict())
-    for event in payload.events:
-        timestamp_str = event.get("timestamp")
-        timestamp = None
-        
-        if timestamp_str:
-            timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+async def record_events(data: dict, db: Session = Depends(get_db)):
+    site_id = data.get("site_id")
+    events = data.get("events", [])
 
-        new_event = models.Event(
-            site_id=payload.site_id,
-            page=event["page"],
-            element=event["element"],
-            event_type=event["type"],
-            timestamp=timestamp
+    for e in events:
+        # Convert timestamp string (like '2025-11-07T21:20:33.230Z') to datetime
+        ts = None
+        if e.get("timestamp"):
+            try:
+                ts = datetime.fromisoformat(e.get("timestamp").replace("Z", "+00:00"))
+            except Exception:
+                ts = datetime.utcnow()  # fallback if parsing fails
+                
+        db_event = Event(
+            site_id=site_id,
+            page=e.get("page"),
+            element=e.get("element"),
+            text=e.get("text"),      # 👈 store text
+            href=e.get("href"),      # 👈 store href
+            event_type=e.get("type"),
+            timestamp=ts,            # 👈 use parsed datetime, not raw string
         )
-        db.add(new_event)
+        db.add(db_event)
 
     db.commit()
-    return {"message": "Events stored successfully"}
+    return {"status": "ok"}
+
+
+@router.delete("/reset")
+async def reset_events(db: Session = Depends(get_db)):
+    db.query(Event).delete()
+    db.commit()
+    return {"status": "reset"}

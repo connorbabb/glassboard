@@ -1,0 +1,104 @@
+:root {
+  --main: #f7f9fb;
+  --card-bg: white;
+  --text-color: black;
+  --secondary: #38bdf8;
+  --secondary-hover: #0ea5e9;
+  --muted-bg: #f3f4f6;
+  --shadow: rgba(0, 0, 0, 0.05);
+}
+
+body {
+    max-width: 750px;
+    margin: 2rem auto;
+    background: var(--main);
+    color: var(--text-color);
+    font-family: system-ui, sans-serif;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px var(--shadow);
+    backdrop-filter: blur(8px);
+}
+
+ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5rem 0 0;
+}
+
+li {
+    padding: 6px 10px;
+    background: var(--main);
+    margin-bottom: 6px;
+    border-radius: 6px;
+    color: var(--text-color);
+}
+
+select, button {
+    background-color: var(--secondary);
+    color: var(--main);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    appearance: none;
+}
+
+select:hover, button:hover {
+    background-color: var(--secondary);
+}
+
+/* Makes the dropdown arrow visible and styled */
+select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'><polygon points='0,0 14,0 7,10' fill='white'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    padding-right: 2rem;
+}
+
+h2, h1 {
+    color: var(--text-color);
+}
+
+.top-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.flex-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 1rem;
+  width: 100%;           /* ensure it doesn’t exceed parent width */
+  box-sizing: border-box; /* include padding in width calc */
+}
+
+.summary,
+.chart-container {
+  flex: 1;
+  min-width: 0;          /* ✨ prevents flex children from overflowing */
+}
+
+#topChart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.card {
+  box-sizing: border-box;
+}
