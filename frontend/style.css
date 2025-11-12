@@ -84,14 +84,14 @@ h2, h1 {
   justify-content: space-between;
   align-items: stretch;
   gap: 1rem;
-  width: 100%;           /* ensure it doesn’t exceed parent width */
-  box-sizing: border-box; /* include padding in width calc */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .summary,
 .chart-container {
   flex: 1;
-  min-width: 0;          /* ✨ prevents flex children from overflowing */
+  min-width: 0;
 }
 
 #topChart {

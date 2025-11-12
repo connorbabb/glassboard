@@ -126,3 +126,11 @@ Open frontend/index.html in a browser. Use the dropdown to select a site (demo12
 
 **Production Notes / Security**
 - Eventually I'll need to replace allow_origins=["*"] with allow_origins=["https://myglassboard.com"] or something similar. The asterisk allows all sites which is a security hole and bad for production.
+
+
+
+to ssh
+
+--
+ssh -i "C:\Users\conno\OneDrive\Documents\glassboard\glassboard-rds-key.pem" ec2
+-user@ec2-34-222-157-238.us-west-2.compute.amazonaws.com

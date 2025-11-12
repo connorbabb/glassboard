@@ -3,18 +3,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Path to top-level db folder
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_FOLDER = os.path.join(PROJECT_ROOT, "database")
-os.makedirs(DB_FOLDER, exist_ok=True)
+# --- RDS Postgres configuration ---
+RDS_HOST = "glassboard-rds.c1ymcqk8mlq7.us-west-2.rds.amazonaws.com"
+RDS_DB = "glassboard-rds"           # your RDS database name
+RDS_USER = "adminuser"              # your master username
+RDS_PASSWORD = "BlueSpartan03!" # the password you set
+RDS_PORT = 5432
 
-DB_PATH = os.path.join(DB_FOLDER, "events.db")
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+DATABASE_URL = f"postgresql+psycopg2://{RDS_USER}:{RDS_PASSWORD}@{RDS_HOST}:{RDS_PORT}/glassboard"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# --- Create engine ---
+engine = create_engine(DATABASE_URL)
 
+# --- ORM session setup ---
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 def get_db():
