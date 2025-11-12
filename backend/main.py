@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import events, stats, snippet
 from .models import Base
 from .database import engine
+from sqlalchemy import text
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -28,3 +29,13 @@ app.include_router(snippet.router)
 @app.get("/")
 def root():
     return {"message": "Glassboard backend running!"}
+
+@app.get("/test-db")
+def test_db():
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT version();"))
+            version = result.fetchone()
+            return {"status": "connected", "version": version[0]}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
