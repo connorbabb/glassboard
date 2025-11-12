@@ -4,8 +4,9 @@ let allSummaryData = []; // stores all-time summary for chart
 function updateDashboard() {
   const siteId = document.getElementById("siteSelect").value;
   const url = siteId
-    ? `http://127.0.0.1:8000/stats?site_id=${siteId}`
-    : `http://127.0.0.1:8000/stats`;
+    ? `http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/stats?site_id=${siteId}`
+    : `http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/stats`;
+
 
   fetch(url)
     .then(res => res.json())
