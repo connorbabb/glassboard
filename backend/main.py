@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .routers import events, stats, snippet
 from .models import Base
-from .database import engine
+from .database import engine, get_db
 from sqlalchemy import text
 import os
 
