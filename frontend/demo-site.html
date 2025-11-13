@@ -27,16 +27,38 @@
   <script src="http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/snippet/demo123.js"></script>
 
   <script>
-    // Optional: Add some extra click tracking to simulate events dynamically
+    const BACKEND_URL = "http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000";
+    const SITE_ID = "demo123"; // replace with unique ID if needed
+
+    function sendEvent(element, text) {
+      const eventData = {
+        site_id: SITE_ID,
+        element,
+        text,
+        timestamp: new Date().toISOString(),
+        page: window.location.pathname
+      };
+
+      fetch(`${BACKEND_URL}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData)
+      }).catch(err => console.error("Tracking failed:", err));
+    }
+
+    // Track button clicks
     const buttons = document.querySelectorAll('button');
     buttons.forEach(btn => btn.addEventListener('click', () => {
       console.log(`Button clicked: ${btn.textContent}`);
+      sendEvent("button", btn.textContent);
     }));
 
+    // Track link clicks
     const links = document.querySelectorAll('a');
     links.forEach(link => link.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent actual navigation for testing
+      e.preventDefault(); // Prevent navigation for testing
       console.log(`Link clicked: ${link.textContent}`);
+      sendEvent("a", link.textContent);
     }));
   </script>
 </body>
