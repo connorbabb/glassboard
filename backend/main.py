@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import events, stats, snippet
 from .models import Base
@@ -29,6 +30,33 @@ app.include_router(snippet.router)
 @app.get("/")
 def root():
     return {"message": "Glassboard backend running!"}
+
+@app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
+def tracking_snippet(site_id: str):
+    js_code = f"""
+    document.addEventListener('click', async (event) => {{
+        const target = event.target;
+        if (target.tagName === 'BUTTON' || target.tagName === 'A') {{
+            const payload = {{
+                site_id: "{site_id}",
+                element: target.tagName.toLowerCase(),
+                text: target.textContent.trim(),
+                page: window.location.pathname
+            }};
+            try {{
+                await fetch('http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/event', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify(payload)
+                }});
+                console.log('Sent click event:', payload);
+            }} catch (err) {{
+                console.error('Error sending click event:', err);
+            }}
+        }}
+    }});
+    """
+    return js_code
 
 @app.get("/test-db")
 def test_db():

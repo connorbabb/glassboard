@@ -129,8 +129,26 @@ Open frontend/index.html in a browser. Use the dropdown to select a site (demo12
 
 
 
-to ssh
+## ssh Instructions
 
---
-ssh -i "C:\Users\conno\OneDrive\Documents\glassboard\glassboard-rds-key.pem" ec2
--user@ec2-34-222-157-238.us-west-2.compute.amazonaws.com
+1. Ensure the EC2 Instance is started on AWS.
+2. Run the following code, using the Elastic IP of the instance (ec2-44-231-42-67.us-west-2.compute.amazonaws.com):
+
+```
+ssh -i "C:\Users\conno\OneDrive\Documents\glassboard\glassboard-rds-key.pem" ec2-user@ec2-44-231-42-67.us-west-2.compute.amazonaws.com
+```
+3. cd into the glassboard directory:
+```
+cd ~/glassboard
+```
+4. Run the file db_test.py in the root directory to ensure connection:
+```
+python db_test.py
+```
+5. Ensure the app runs locally:
+```
+uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
+6. While running, test these links:
+http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000
+http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/docs
