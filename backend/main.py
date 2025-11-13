@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .routers import events, stats, snippet
 from .models import Base
 from .database import engine
@@ -20,6 +21,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 # Include routers
 app.include_router(events.router)
