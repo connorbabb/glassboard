@@ -6,7 +6,7 @@ from datetime import datetime
 
 router = APIRouter(prefix="/events", tags=["Events"])
 
-@router.post("")
+@router.post("/")
 async def record_events(data: dict, db: Session = Depends(get_db)):
     site_id = data.get("site_id")
     events = data.get("events", [])

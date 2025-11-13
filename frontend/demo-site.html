@@ -39,7 +39,7 @@
         page: window.location.pathname
       };
 
-      fetch(`${BACKEND_URL}/events`, {
+      fetch(`${BACKEND_URL}/events/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData)
