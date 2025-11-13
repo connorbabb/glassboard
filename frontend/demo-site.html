@@ -13,7 +13,6 @@
   <h1>Glassboard Demo Site</h1>
   <p>Click the buttons or links below to generate tracking events:</p>
 
-  <!-- Simulated user interactions -->
   <button id="signup">Sign Up</button>
   <button id="buy">Buy Now</button>
   <button id="subscribe">Subscribe</button>
@@ -21,14 +20,10 @@
   <a href="#">Contact Us</a>
 
   <hr>
-  <p><strong>Tip:</strong> Replace <code>demo123</code> with your unique site ID if testing multiple clients.</p>
-
-  <!-- Embeddable tracking snippet -->
-  <script src="http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/snippet/demo123.js"></script>
 
   <script>
     const BACKEND_URL = "http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000";
-    const SITE_ID = "demo123"; // replace with unique ID if needed
+    const SITE_ID = "demo123"; // your test site ID
 
     function sendEvent(element, text) {
       const eventData = {
@@ -45,24 +40,28 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData)
-      }).catch(err => console.error("Tracking failed:", err));
+      })
+      .then(res => res.json())
+      .then(data => console.log("Event recorded:", data))
+      .catch(err => console.error("Tracking failed:", err));
     }
 
+    // Track buttons
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        console.log(`Button clicked: ${btn.textContent}`);
+        sendEvent("button", btn.textContent);
+      });
+    });
 
-    // Track button clicks
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(btn => btn.addEventListener('click', () => {
-      console.log(`Button clicked: ${btn.textContent}`);
-      sendEvent("button", btn.textContent);
-    }));
-
-    // Track link clicks
-    const links = document.querySelectorAll('a');
-    links.forEach(link => link.addEventListener('click', (e) => {
-      e.preventDefault(); // Prevent navigation for testing
-      console.log(`Link clicked: ${link.textContent}`);
-      sendEvent("a", link.textContent);
-    }));
+    // Track links
+    document.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault(); // prevent actual navigation
+        console.log(`Link clicked: ${link.textContent}`);
+        sendEvent("a", link.textContent);
+      });
+    });
   </script>
 </body>
 </html>
