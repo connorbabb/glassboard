@@ -14,28 +14,30 @@ Base.metadata.create_all(bind=engine)
 # Create app
 app = FastAPI()
 
-# CORS setup for local frontend
+# CORS setup (allow your frontend to call APIs)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or ["http://127.0.0.1:5500"] for stricter testing
+    allow_origins=["*"],  # replace with frontend URLs if desired
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.mount("/", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../frontend"), html=True), name="frontend")
+# === Serve static frontend under /frontend ===
+frontend_path = os.path.join(os.path.dirname(__file__), "../frontend")
+app.mount("/frontend", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
-
-# Include routers
+# === Include routers ===
 app.include_router(events.router)
 app.include_router(stats.router)
 app.include_router(snippet.router)
 
-# Optional root route to avoid 404 at "/"
+# Optional root route
 @app.get("/")
 def root():
     return {"message": "Glassboard backend running!"}
 
+# Optional snippet endpoint
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
 def tracking_snippet(site_id: str):
     js_code = f"""
@@ -49,10 +51,10 @@ def tracking_snippet(site_id: str):
                 page: window.location.pathname
             }};
             try {{
-                await fetch('http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/event/', {{
+                await fetch('http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/events/', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({{ site_id: "{site_id}", events: [payload] }})
                 }});
                 console.log('Sent click event:', payload);
             }} catch (err) {{
@@ -63,6 +65,7 @@ def tracking_snippet(site_id: str):
     """
     return js_code
 
+# Test DB connection
 @app.get("/test-db")
 def test_db():
     try:
