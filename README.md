@@ -152,3 +152,4 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 6. While running, test these links:
 http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000
 http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/docs
+http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com/demo-site.html
