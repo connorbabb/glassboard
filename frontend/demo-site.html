@@ -33,10 +33,12 @@
     function sendEvent(element, text) {
       const eventData = {
         site_id: SITE_ID,
-        element,
-        text,
-        timestamp: new Date().toISOString(),
-        page: window.location.pathname
+        events: [{
+          element,
+          text,
+          timestamp: new Date().toISOString(),
+          page: window.location.pathname
+        }]
       };
 
       fetch(`${BACKEND_URL}/events/`, {
@@ -45,6 +47,7 @@
         body: JSON.stringify(eventData)
       }).catch(err => console.error("Tracking failed:", err));
     }
+
 
     // Track button clicks
     const buttons = document.querySelectorAll('button');
