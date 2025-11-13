@@ -47,7 +47,7 @@ def tracking_snippet(site_id: str):
                 page: window.location.pathname
             }};
             try {{
-                await fetch('http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/event', {{
+                await fetch('http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/event/', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
                     body: JSON.stringify(payload)
