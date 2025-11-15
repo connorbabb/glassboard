@@ -1,12 +1,23 @@
-from fastapi import FastAPI
+# backend/main.py
+
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+
+from .auth import get_current_user
+
 from .routers import events, stats, snippet
-from .models import Base
+from .models import Base, User
 from .database import engine, get_db
 from sqlalchemy import text
+
 import os
+
+# Import the auth router
+from .auth import router as auth_router
+
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -14,30 +25,33 @@ Base.metadata.create_all(bind=engine)
 # Create app
 app = FastAPI()
 
-# CORS setup (allow your frontend to call APIs)
+# Attach auth routes
+app.include_router(auth_router)
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # replace with frontend URLs if desired
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# === Serve static frontend under /frontend ===
-frontend_path = os.path.join(os.path.dirname(__file__), "../frontend")
+# Serve frontend
+frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
 app.mount("/frontend", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
-# === Include routers ===
+# API routers
 app.include_router(events.router)
 app.include_router(stats.router)
 app.include_router(snippet.router)
 
-# Optional root route
+
 @app.get("/")
 def root():
     return {"message": "Glassboard backend running!"}
 
-# Optional snippet endpoint
+
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
 def tracking_snippet(site_id: str):
     js_code = f"""
@@ -65,7 +79,7 @@ def tracking_snippet(site_id: str):
     """
     return js_code
 
-# Test DB connection
+
 @app.get("/test-db")
 def test_db():
     try:
@@ -75,3 +89,7 @@ def test_db():
             return {"status": "connected", "version": version[0]}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
+
+@app.get("/dashboard")
+def dashboard(request: Request, user=Depends(get_current_user)):
+    return RedirectResponse(url="/frontend/index.html")

@@ -1,3 +1,15 @@
+async function ensureLoggedIn() {
+    const res = await fetch("http://127.0.0.1:8000/me", {
+        credentials: "include"
+    });
+
+    if (res.status !== 200) {
+        window.location.href = "/frontend/login.html";
+    }
+}
+
+ensureLoggedIn();
+
 let chartInstance = null;
 let allSummaryData = []; // stores all-time summary for chart
 

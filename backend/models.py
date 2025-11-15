@@ -13,3 +13,9 @@ class Event(Base):
     href = Column(String, nullable=True) # 👈 optional link target (if any)
     event_type = Column(String)
     timestamp = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True)
+    password_hash = Column(String)

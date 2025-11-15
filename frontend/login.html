@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glassboard Login</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Login</h1>
+  <div class="card">
+    <form id="loginForm">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    <p id="message"></p>
+    <p>No account? <a href="register.html">Register</a></p>
+  </div>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const res = await fetch("http://127.0.0.1:8000/login", {
+        method: "POST",
+        body: formData,
+        credentials: "include" // needed for cookies
+      });
+
+      if (res.redirected) {
+        window.location.href = res.url; // go to dashboard
+      } else {
+        const data = await res.json();
+        message.textContent = data.error || "Login failed";
+        message.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>

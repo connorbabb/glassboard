@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glassboard Register</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Register</h1>
+  <div class="card">
+    <form id="registerForm">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Register</button>
+    </form>
+    <p id="message"></p>
+    <p>Already have an account? <a href="login.html">Login</a></p>
+  </div>
+
+  <script>
+    const form = document.getElementById("registerForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const res = await fetch("http://127.0.0.1:8000/register", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        message.textContent = data.error;
+        message.style.color = "red";
+      } else {
+        message.textContent = data.message;
+        message.style.color = "green";
+
+        // Redirect to login after 1s
+        setTimeout(() => {
+          window.location.href = "/frontend/login.html";
+        }, 1000);
+      }
+    });
+  </script>
+</body>
+</html>

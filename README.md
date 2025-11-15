@@ -145,11 +145,24 @@ cd ~/glassboard
 ```
 python db_test.py
 ```
-5. Ensure the app runs locally:
+5. Run the app either in the foreground or background with nohup:
 ```
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
+
+nohup uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
 ```
 6. While running, test these links:
-http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000
-http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/docs
-http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com/demo-site.html
+demo-site:
+http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/frontend/demo-site.html
+dashboard:
+http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/frontend/index.html
+
+7. Tips:
+To kill all uvicorn processes:
+```
+pkill -f uvicorn
+```
+To check the log
+```
+tail -f nohup.out
+```
