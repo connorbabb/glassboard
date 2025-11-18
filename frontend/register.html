@@ -47,15 +47,15 @@ form.addEventListener("submit", async (e) => {
       return;
     }
 
-    if (data && data.error) {
-      message.textContent = data.error;
-      message.style.color = "red";
-    } else if (data && data.message) {
-      message.textContent = data.message;
-      message.style.color = "green";
-      setTimeout(() => {
-        window.location.href = "/frontend/login.html";
-      }, 1000);
+    if (data && (data.error || data.message)) {
+      message.textContent = data.error || data.message;
+      message.style.color = data.error ? "red" : "green";
+
+      if (data.message) {
+        setTimeout(() => {
+          window.location.href = "/frontend/login.html";
+        }, 1000);
+      }
     } else {
       message.textContent = "Unexpected server response";
       message.style.color = "red";
