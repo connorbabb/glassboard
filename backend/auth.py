@@ -37,7 +37,6 @@ def get_current_user(
 
 @router.post("/login")
 def login(
-    response: Response,
     username: str = Form(...),
     password: str = Form(...),
     db=Depends(get_db)
@@ -47,18 +46,21 @@ def login(
     if not user or not pwd_context.verify(password, user.password_hash):
         return {"error": "Invalid credentials"}
 
+    # Create a session token
     session_token = secrets.token_hex(16)
     sessions[session_token] = user.id
 
-    response.set_cookie(
+    # Attach cookie to the redirect response
+    redirect = RedirectResponse(url="/frontend/index.html", status_code=302)
+    redirect.set_cookie(
         key="session_token",
         value=session_token,
         httponly=True,
-        samesite="none",
-        secure=False,     # MUST BE OFF until HTTPS
+        samesite="lax",   # safe for HTTP
+        secure=False      # must be False if not using HTTPS
     )
 
-    return RedirectResponse(url="/frontend/index.html", status_code=302)
+    return redirect
 
 
 @router.post("/logout")

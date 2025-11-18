@@ -39,7 +39,7 @@ app.add_middleware(
 
 # Serve frontend
 frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
-app.mount("/frontend", StaticFiles(directory=frontend_path, html=True), name="frontend")
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
 # API routers
 app.include_router(events.router)
@@ -47,10 +47,9 @@ app.include_router(stats.router)
 app.include_router(snippet.router)
 app.include_router(auth_router)
 
-
 @app.get("/")
 def root():
-    return {"message": "Glassboard backend running!"}
+    return RedirectResponse(url="/frontend/login.html")
 
 
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
