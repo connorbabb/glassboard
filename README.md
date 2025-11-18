@@ -159,6 +159,8 @@ demo-site:
 http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/frontend/demo-site.html
 dashboard:
 http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/frontend/index.html
+start here:
+http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/frontend/login.html
 
 7. Tips:
 To kill all uvicorn processes:

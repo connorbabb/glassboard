@@ -129,3 +129,5 @@ async function logout() {
         alert("Logout failed");
     }
 }
+
+document.getElementById("logoutBtn").addEventListener("click", logout);
