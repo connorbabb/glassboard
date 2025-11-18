@@ -54,9 +54,8 @@ def login(
         key="session_token",
         value=session_token,
         httponly=True,
-        samesite="none",
-        secure=True,
-        domain="ec2-44-231-42-67.us-west-2.compute.amazonaws.com"
+        samesite="lax",   # SAFE for HTTP
+        secure=False,     # MUST BE OFF until HTTPS
     )
 
     return RedirectResponse(url="/frontend/index.html", status_code=302)
