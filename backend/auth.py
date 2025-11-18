@@ -69,8 +69,14 @@ def logout(response: Response, request: Request):
     if token in sessions:
         del sessions[token]
 
-    response.delete_cookie("session_token")
+    response.delete_cookie(
+        key="session_token",
+        httponly=True,
+        samesite="lax",
+        secure=False
+    )
     return {"message": "Logged out"}
+
 
 @router.get("/me")
 def me(user=Depends(get_current_user)):
