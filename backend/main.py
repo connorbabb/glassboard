@@ -45,6 +45,7 @@ app.mount("/frontend", StaticFiles(directory=frontend_path, html=True), name="fr
 app.include_router(events.router)
 app.include_router(stats.router)
 app.include_router(snippet.router)
+app.include_router(auth_router)
 
 
 @app.get("/")

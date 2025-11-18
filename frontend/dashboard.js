@@ -115,11 +115,15 @@ updateDashboard();
 setInterval(updateDashboard, 5000);
 document.getElementById("siteSelect").addEventListener("change", updateDashboard);
 
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-    await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/logout", {
+async function logout() {
+    const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/logout", {
         method: "POST",
-        credentials: "include"
+        credentials: "include"  // THIS IS REQUIRED to send the cookie
     });
 
-    window.location.href = "/frontend/login.html";
-});
+    if (res.ok) {
+        window.location.href = "/frontend/login.html";
+    } else {
+        alert("Logout failed");
+    }
+}
