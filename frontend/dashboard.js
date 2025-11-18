@@ -114,3 +114,12 @@ document.getElementById("summaryRange").addEventListener("change", () => {
 updateDashboard();
 setInterval(updateDashboard, 5000);
 document.getElementById("siteSelect").addEventListener("change", updateDashboard);
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/logout", {
+        method: "POST",
+        credentials: "include"
+    });
+
+    window.location.href = "/frontend/login.html";
+});
