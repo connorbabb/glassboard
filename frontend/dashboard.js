@@ -1,5 +1,5 @@
 async function ensureLoggedIn() {
-    const res = await fetch("http://127.0.0.1:8000/me", {
+    const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/me", {
         credentials: "include"
     });
 
