@@ -51,15 +51,13 @@ def login(
     sessions[session_token] = user.id
 
     response.set_cookie(
-        key="access_token",
+        key="session_token",
         value=session_token,
         httponly=True,
         samesite="none",
         secure=True,
         domain="ec2-44-231-42-67.us-west-2.compute.amazonaws.com"
     )
-
-
 
     return RedirectResponse(url="/frontend/index.html", status_code=302)
 
