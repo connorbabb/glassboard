@@ -84,8 +84,9 @@ pip install psycopg2-binary
 For local testing, SQLite is used. Ensure Base.metadata.create_all(engine) is called on startup. For production, configure PostgreSQL or AWS RDS and update DATABASE_URL.
 
 
-**Run the backend server**
+**Run the backend server locally**
 
+You will need to change the db url as well to the local one.
 ```
 uvicorn backend.main:app --reload
 ```
@@ -107,7 +108,7 @@ Open frontend/index.html in a browser. Use the dropdown to select a site (demo12
 - Provide a unique site_id for each client and update their snippet:
 
 ```
-<script src="http://127.0.0.1:8000/snippet/<unique-site-id>.js"></script>
+<script src="http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/snippet/<unique-site-id>.js"></script>
 ```
 
 **Notes**
