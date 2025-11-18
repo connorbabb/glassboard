@@ -79,11 +79,19 @@ def register(username: str = Form(...), password: str = Form(...), db=Depends(ge
     if db.query(User).filter(User.username == username).first():
         return {"error": "Username already exists"}
 
-    # truncate password to 72 bytes
-    MAX_BCRYPT_BYTES = 72  # bcrypt limitation in bytes
+    MAX_BCRYPT_BYTES = 72
 
-    # encode to bytes and truncate
-    safe_password = password.encode("utf-8")[:MAX_BCRYPT_BYTES]
+    # truncate to fit bcrypt limit (in bytes)
+    def truncate_password(password: str, max_bytes=MAX_BCRYPT_BYTES) -> str:
+        encoded = password.encode("utf-8")
+        if len(encoded) <= max_bytes:
+            return password
+        # truncate and decode safely
+        truncated = encoded[:max_bytes]
+        # decode ignoring incomplete multibyte at the end
+        return truncated.decode("utf-8", errors="ignore")
+
+    safe_password = truncate_password(password)
 
     user = User(
         username=username,
