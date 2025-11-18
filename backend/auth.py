@@ -72,14 +72,8 @@ def logout(response: Response, request: Request):
 def me(user=Depends(get_current_user)):
     return {"id": user.id, "username": user.username}
 
+
 MAX_BCRYPT_LENGTH = 72  # bcrypt limitation
-
-@router.post("/register")
-def register(username: str = Form(...), password: str = Form(...), db=Depends(get_db)):
-    if db.query(User).filter(User.username == username).first():
-        return {"error": "Username already exists"}
-
-    MAX_BCRYPT_BYTES = 72
 
 @router.post("/register")
 def register(username: str = Form(...), password: str = Form(...), db=Depends(get_db)):
