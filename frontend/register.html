@@ -27,30 +27,45 @@
     const form = document.getElementById("registerForm");
     const message = document.getElementById("message");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-      const formData = new FormData(form);
-      const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/register", {
-        method: "POST",
-        body: formData
-      });
+  const formData = new FormData(form);
 
-      const data = await res.json();
-
-      if (data.error) {
-        message.textContent = data.error;
-        message.style.color = "red";
-      } else {
-        message.textContent = data.message;
-        message.style.color = "green";
-
-        // Redirect to login after 1s
-        setTimeout(() => {
-          window.location.href = "/frontend/login.html";
-        }, 1000);
-      }
+  try {
+    const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/register", {
+      method: "POST",
+      body: formData
     });
+
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      message.textContent = "Invalid server response";
+      message.style.color = "red";
+      return;
+    }
+
+    if (data && data.error) {
+      message.textContent = data.error;
+      message.style.color = "red";
+    } else if (data && data.message) {
+      message.textContent = data.message;
+      message.style.color = "green";
+      setTimeout(() => {
+        window.location.href = "/frontend/login.html";
+      }, 1000);
+    } else {
+      message.textContent = "Unexpected server response";
+      message.style.color = "red";
+    }
+  } catch (err) {
+    message.textContent = "Network error";
+    message.style.color = "red";
+  }
+});
+
   </script>
 </body>
 </html>
