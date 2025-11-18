@@ -80,12 +80,16 @@ def register(username: str = Form(...), password: str = Form(...), db=Depends(ge
         return {"error": "Username already exists"}
 
     # truncate password to 72 bytes
-    safe_password = password[:MAX_BCRYPT_LENGTH]
+    MAX_BCRYPT_BYTES = 72  # bcrypt limitation in bytes
+
+    # encode to bytes and truncate
+    safe_password = password.encode("utf-8")[:MAX_BCRYPT_BYTES]
 
     user = User(
         username=username,
         password_hash=pwd_context.hash(safe_password)
     )
+
     db.add(user)
     db.commit()
     return {"message": "User created, you can now log in"}
