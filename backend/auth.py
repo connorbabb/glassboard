@@ -54,7 +54,7 @@ def login(
         key="session_token",
         value=session_token,
         httponly=True,
-        samesite="lax",   # SAFE for HTTP
+        samesite="none",
         secure=False,     # MUST BE OFF until HTTPS
     )
 

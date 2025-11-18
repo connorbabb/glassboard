@@ -8,6 +8,8 @@ async function ensureLoggedIn() {
     }
 }
 
+setTimeout(ensureLoggedIn, 300);
+
 ensureLoggedIn();
 
 let chartInstance = null;
