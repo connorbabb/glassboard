@@ -81,23 +81,36 @@ def register(username: str = Form(...), password: str = Form(...), db=Depends(ge
 
     MAX_BCRYPT_BYTES = 72
 
-    # truncate to fit bcrypt limit (in bytes)
+@router.post("/register")
+def register(username: str = Form(...), password: str = Form(...), db=Depends(get_db)):
+    # Check if username already exists
+    if db.query(User).filter(User.username == username).first():
+        return {"error": "Username already exists"}
+
+    # --- Bcrypt safe password ---
+    MAX_BCRYPT_BYTES = 72
+
     def truncate_password(password: str, max_bytes=MAX_BCRYPT_BYTES) -> str:
+        """
+        Truncate the password to fit bcrypt's 72-byte limit,
+        safely handling multibyte UTF-8 characters.
+        """
         encoded = password.encode("utf-8")
         if len(encoded) <= max_bytes:
             return password
-        # truncate and decode safely
         truncated = encoded[:max_bytes]
-        # decode ignoring incomplete multibyte at the end
         return truncated.decode("utf-8", errors="ignore")
 
-    safe_password = truncate_password(password)
+    safe_password = truncate_password(password)  # string, not bytes
 
+    # Create user with hashed password
     user = User(
         username=username,
-        password_hash=pwd_context.hash(safe_password)
+        password_hash=pwd_context.hash(safe_password)  # pass string here
     )
 
+    # Save to DB
     db.add(user)
     db.commit()
+
     return {"message": "User created, you can now log in"}
