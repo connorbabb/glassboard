@@ -53,8 +53,11 @@ def login(
     response.set_cookie(
         key="session_token",
         value=session_token,
-        httponly=True
+        httponly=True,
+        samesite="None",   # allow cross-site cookies
+        secure=False       # change to True ONLY if using HTTPS
     )
+
 
     return RedirectResponse(url="/frontend/index.html", status_code=302)
 

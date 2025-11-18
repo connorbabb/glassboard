@@ -144,6 +144,8 @@ cd ~/glassboard
 ```
 4. Run the file db_test.py in the root directory to ensure connection:
 ```
+pip install bcrypt==3.2.0
+
 python db_test.py
 ```
 5. Run the app either in the foreground or background with nohup:
