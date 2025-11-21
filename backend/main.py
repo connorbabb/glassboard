@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 
 from .auth import get_current_user
 
-from .routers import events, stats, snippet
+from .routers import events, stats, snippet, website
 from .models import Base, User
 from .database import engine, get_db
 from sqlalchemy import text
@@ -17,6 +17,7 @@ import os
 
 # Import the auth router
 from .auth import router as auth_router
+from .routers.website import router as website_router
 
 
 # Create tables
@@ -24,9 +25,6 @@ Base.metadata.create_all(bind=engine)
 
 # Create app
 app = FastAPI()
-
-# Attach auth routes
-app.include_router(auth_router)
 
 # CORS
 app.add_middleware(
@@ -45,7 +43,7 @@ app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 app.include_router(events.router)
 app.include_router(stats.router)
 app.include_router(snippet.router)
-app.include_router(auth_router)
+app.include_router(website_router)
 
 @app.get("/")
 def root():

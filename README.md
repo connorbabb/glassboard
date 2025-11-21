@@ -171,3 +171,11 @@ To check the log
 ```
 tail -f nohup.out
 ```
+
+-- Use Alembic – an actual migration tool used with SQLAlchemy:
+pip install alembic
+alembic init alembic
+
+-- Then every time you change your model:
+alembic revision --autogenerate -m "Add Website table"
+alembic upgrade head
