@@ -14,7 +14,13 @@ except Exception as e:
     print("❌ Connection failed:", e)
 
 try:
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(
+        dbname="glassboard",
+        user="adminuser",
+        password="BlueSpartan03!",
+        host="glassboard-rds.c1ymcqk8mlq7.us-west-2.rds.amazonaws.com",
+        port="5432"
+    )
     print("SUCCESS: Connected!")
     conn.close()
 except Exception as e:
