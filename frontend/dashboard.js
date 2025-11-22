@@ -148,8 +148,10 @@ document.getElementById('registerWebsiteForm').addEventListener('submit', async 
     const res = await fetch('/websites/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: "include",
       body: JSON.stringify({ name, domain })
     });
+
 
     const data = await res.json();
 
