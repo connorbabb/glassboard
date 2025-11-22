@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 
 from .auth import get_current_user
 
-from .routers import events, stats, snippet, website
+from .routers import events, stats, website
 from .models import Base, User
 from .database import engine, get_db
 from sqlalchemy import text
@@ -41,7 +41,6 @@ app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 # API routers
 app.include_router(events.router)
 app.include_router(stats.router)
-app.include_router(snippet.router)
 app.include_router(website_router)
 app.include_router(auth_router)
 
