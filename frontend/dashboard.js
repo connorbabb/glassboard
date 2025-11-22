@@ -131,3 +131,66 @@ async function logout() {
 }
 
 document.getElementById("logoutBtn").addEventListener("click", logout);
+
+
+document.getElementById('registerWebsiteForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById('websiteName').value;
+  const domain = document.getElementById('websiteDomain').value;
+
+  if (!domain) {
+    alert('Domain is required');
+    return;
+  }
+
+  try {
+    const res = await fetch('/websites/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, domain })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // Show snippet
+      const snippetDiv = document.getElementById('snippetOutput');
+      const snippetText = document.getElementById('snippetText');
+      snippetText.value = data.snippet;
+      snippetDiv.style.display = 'block';
+
+      // Add new website to dropdown
+      const dropdown = document.getElementById('siteSelect');
+      const option = document.createElement('option');
+      option.value = data.site_id;
+      option.textContent = name || domain;
+      dropdown.appendChild(option);
+
+      // Clear form
+      document.getElementById('websiteName').value = '';
+      document.getElementById('websiteDomain').value = '';
+    } else {
+      alert(data.detail || 'Failed to register website');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error registering website');
+  }
+});
+
+async function loadWebsites() {
+  const res = await fetch('/websites/', { credentials: 'include' });
+  if (res.ok) {
+    const sites = await res.json();
+    const dropdown = document.getElementById('siteSelect');
+    dropdown.innerHTML = '<option value="">All Sites</option>';
+    sites.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w.site_id;
+      opt.textContent = w.name || w.domain;
+      dropdown.appendChild(opt);
+    });
+  }
+}
+loadWebsites();

@@ -1,39 +1,35 @@
-# app/routes/website.py
+# backend/routers/website.py
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..database import get_db
+import secrets
+
 from ..models import Website
-import uuid
+from ..database import get_db
 from ..auth import get_current_user
 
-router = APIRouter(prefix="/website", tags=["Websites"])
+router = APIRouter(prefix="/websites", tags=["websites"])
 
 @router.post("/register")
-def register_website(name: str = None, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    user_id = user.id
-    site_id = f"site_{uuid.uuid4().hex[:8]}"
+def register_website(data: dict, db: Session = Depends(get_db), user = Depends(get_current_user)):
+    # Generate a unique site_id
+    site_id = secrets.token_hex(8)
 
-    new_site = Website(
+    website = Website(
         site_id=site_id,
-        user_id=user_id,
-        name=name
+        name=data.get("name"),
+        domain=data.get("domain"),
+        owner=user
     )
-    db.add(new_site)
+    db.add(website)
     db.commit()
-    db.refresh(new_site)
+    db.refresh(website)
 
-    snippet = f"""
-    <script>
-      (function() {{
-        const SITE_ID = "{site_id}";
-        const SCRIPT_URL = "http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/tracking.js?site_id=" + SITE_ID;
-        const s = document.createElement("script");
-        s.src = SCRIPT_URL;
-        s.async = true;
-        document.head.appendChild(s);
-      }})();
-    </script>
-    """
-
+    snippet = f'<script src="http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/snippet/{site_id}.js"></script>'
     return {"site_id": site_id, "snippet": snippet}
+
+
+@router.get("/")
+def list_websites(db: Session = Depends(get_db), user = Depends(get_current_user)):
+    websites = db.query(Website).filter(Website.owner == user).all()
+    return [{"site_id": w.site_id, "name": w.name or w.domain} for w in websites]
