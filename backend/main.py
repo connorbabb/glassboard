@@ -52,27 +52,33 @@ def root():
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
 def tracking_snippet(site_id: str):
     js_code = f"""
-    document.addEventListener('click', async (event) => {{
-        const target = event.target;
-        if (target.tagName === 'BUTTON' || target.tagName === 'A') {{
-            const payload = {{
-                site_id: "{site_id}",
-                element: target.tagName.toLowerCase(),
-                text: target.textContent.trim(),
-                page: window.location.pathname
-            }};
-            try {{
-                await fetch('http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/events/', {{
-                    method: 'POST',
-                    headers: {{ 'Content-Type': 'application/json' }},
-                    body: JSON.stringify({{ site_id: "{site_id}", events: [payload] }})
-                }});
-                console.log('Sent click event:', payload);
-            }} catch (err) {{
-                console.error('Error sending click event:', err);
+    (function() {{
+        const SITE_ID = "{site_id}";
+        const BASE_URL = window.location.origin; // dynamically uses current host
+
+        document.addEventListener('click', async (event) => {{
+            const target = event.target;
+            if (target.tagName === 'BUTTON' || target.tagName === 'A') {{
+                const payload = {{
+                    site_id: SITE_ID,
+                    element: target.tagName.toLowerCase(),
+                    text: target.textContent.trim(),
+                    page: window.location.pathname,
+                    timestamp: new Date().toISOString()
+                }};
+                try {{
+                    await fetch(`${{BASE_URL}}/events/`, {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ site_id: SITE_ID, events: [payload] }})
+                    }});
+                    console.log('Sent click event:', payload);
+                }} catch (err) {{
+                    console.error('Tracking failed:', err);
+                }}
             }}
-        }}
-    }});
+        }});
+    }})();
     """
     return js_code
 
