@@ -54,7 +54,7 @@ def tracking_snippet(site_id: str):
     js_code = f"""
     (function() {{
         const SITE_ID = "{site_id}";
-        const BASE_URL = window.location.origin; // dynamically uses current host
+        const BASE_URL = "http://127.0.0.1:8000";
 
         document.addEventListener('click', async (event) => {{
             const target = event.target;
