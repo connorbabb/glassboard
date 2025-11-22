@@ -179,3 +179,7 @@ alembic init alembic
 -- Then every time you change your model:
 alembic revision --autogenerate -m "Add Website table"
 alembic upgrade head
+
+
+-- To access PostgreSQL and look at tables and data:
+psql -h glassboard-rds.c1ymcqk8mlq7.us-west-2.rds.amazonaws.com -U adminuser -d glassboard -W
