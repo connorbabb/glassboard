@@ -28,7 +28,10 @@ app = FastAPI()
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://127.0.0.1:5500",  # Local live server
+        "http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com"  # Your EC2 frontend origin
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,34 +55,36 @@ def root():
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
 def tracking_snippet(site_id: str):
     js_code = f"""
-    (function() {{
-        const SITE_ID = "{site_id}";
-        const BASE_URL = "http://127.0.0.1:8000";
+        (function() {{
+            const SITE_ID = "{site_id}";
+            const BASE_URL = window.location.hostname.includes('localhost')
+                ? 'http://127.0.0.1:8000'
+                : 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000';
 
-        document.addEventListener('click', async (event) => {{
-            const target = event.target;
-            if (target.tagName === 'BUTTON' || target.tagName === 'A') {{
-                const payload = {{
-                    site_id: SITE_ID,
-                    element: target.tagName.toLowerCase(),
-                    text: target.textContent.trim(),
-                    page: window.location.pathname,
-                    timestamp: new Date().toISOString()
-                }};
-                try {{
-                    await fetch(`${{BASE_URL}}/events/`, {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ site_id: SITE_ID, events: [payload] }})
-                    }});
-                    console.log('Sent click event:', payload);
-                }} catch (err) {{
-                    console.error('Tracking failed:', err);
+            document.addEventListener('click', async (event) => {{
+                const target = event.target;
+                if (target.tagName === 'BUTTON' || target.tagName === 'A') {{
+                    const payload = {{
+                        site_id: SITE_ID,
+                        element: target.tagName.toLowerCase(),
+                        text: target.textContent.trim(),
+                        page: window.location.pathname
+                    }};
+                    try {{
+                        await fetch(`${{BASE_URL}}/events/`, {{
+                            method: 'POST',
+                            headers: {{ 'Content-Type': 'application/json' }},
+                            body: JSON.stringify({{ site_id: SITE_ID, events: [payload] }})
+                        }});
+                        console.log('Sent click event:', payload);
+                    }} catch (err) {{
+                        console.error('Tracking failed:', err);
+                    }}
                 }}
-            }}
-        }});
-    }})();
-    """
+            }});
+        }})();
+        """
+
     return js_code
 
 
