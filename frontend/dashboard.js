@@ -49,18 +49,26 @@ function updateDashboard() {
       const range = document.getElementById("summaryRange").value;
       renderFilteredChart(range);
 
-      // === Show all recorded events again ===
+      // === Show all recorded events (Limited to 10) ===
       const allList = document.getElementById("all");
       allList.innerHTML = "";
-      // We will only show clicks for now, as showing all page views would be noisy
-      data.all_clicks.forEach(ev => { 
-        // Only show button or <a> clicks if you wanted that filter
-        if (ev.element === "button" || ev.element === "a") {
-          const li = document.createElement("li");
-          li.textContent = `[${ev.page}] ${ev.element}: "${ev.text}" — ${ev.timestamp}`;
-          allList.appendChild(li);
-        }
+
+      // IMPORTANT: Assuming your backend returns events oldest-first, we reverse it to get newest-first, then slice the top 10.
+      // Use .slice() to create a copy before reversing.
+      const recentEvents = data.all_clicks.slice().reverse().slice(0, 10);
+
+      recentEvents.forEach(ev => { 
+        // Now that the list is short (max 10), we can show every event for clarity
+        const li = document.createElement("li");
+        // Enhanced display to show both page views and clicks (when your backend sends them)
+        const eventDetail = ev.element 
+            ? `[CLICK] ${ev.element}: "${ev.text}"` 
+            : `[PAGE VIEW]`;
+
+        li.textContent = `${eventDetail} on page ${ev.page} — ${ev.timestamp}`;
+        allList.appendChild(li);
       });
+      // ...
     })
     .catch(err => console.error("Error loading stats:", err));
 }
