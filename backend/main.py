@@ -52,39 +52,67 @@ def root():
     return RedirectResponse(url="/frontend/login.html")
 
 
+# backend/main.py (Only the updated tracking_snippet function)
+
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
 def tracking_snippet(site_id: str):
+    # This snippet is the final, working JavaScript code.
     js_code = f"""
         (function() {{
-            const SITE_ID = "{site_id}";
-            const BASE_URL = window.location.hostname.includes('localhost')
-                ? 'http://127.0.0.1:8000'
-                : 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000';
+            const SITE_ID = "{site_id}"; // Substituted by Python
+            // We use the full, fixed endpoint URL here.
+            const TRACKING_ENDPOINT = 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/track'; 
 
-            document.addEventListener('click', async (event) => {{
-                const target = event.target;
-                if (target.tagName === 'BUTTON' || target.tagName === 'A') {{
-                    const payload = {{
-                        site_id: SITE_ID,
-                        element: target.tagName.toLowerCase(),
-                        text: target.textContent.trim(),
-                        page: window.location.pathname
+            // 1. CORE EVENT SENDER FUNCTION (Sends single, flat payload to /track)
+            function sendEvent(eventType, elementDetails = {{}}) {{
+                const payload = {{
+                    site_id: SITE_ID,
+                    event_type: eventType, // CRITICAL: 'page_view' or 'click'
+                    timestamp: new Date().toISOString(),
+                    page: window.location.pathname,
+                    referrer: document.referrer || null,
+                    
+                    // Click-specific fields
+                    element: elementDetails.element || null,
+                    text: elementDetails.text || null,
+                    href: elementDetails.href || null,
+                }};
+
+                fetch(TRACKING_ENDPOINT, {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify(payload), // Send single, flat payload
+                }})
+                .then(res => res.json())
+                .catch(err => console.error("Glassboard Tracking failed:", err));
+            }}
+
+            // 2. PAGE VIEW TRACKING (NEW)
+            sendEvent('page_view');
+
+
+            // 3. CLICK TRACKING (UPDATED)
+            document.addEventListener("click", (e) => {{
+                let element = e.target;
+                
+                // Traverse up the DOM to find the button or link
+                while (element && element.tagName !== 'BUTTON' && element.tagName !== 'A' && element.tagName !== 'BODY') {{
+                    element = element.parentElement;
+                }}
+
+                if (element && (element.tagName === 'BUTTON' || element.tagName === 'A')) {{
+                    const details = {{
+                        element: element.tagName.toLowerCase(),
+                        text: element.innerText.substring(0, 100).trim() || element.getAttribute('aria-label') || 'N/A',
+                        href: element.tagName === 'A' ? element.getAttribute('href') : null
                     }};
-                    try {{
-                        await fetch(`${{BASE_URL}}/events/`, {{
-                            method: 'POST',
-                            headers: {{ 'Content-Type': 'application/json' }},
-                            body: JSON.stringify({{ site_id: SITE_ID, events: [payload] }})
-                        }});
-                        console.log('Sent click event:', payload);
-                    }} catch (err) {{
-                        console.error('Tracking failed:', err);
-                    }}
+                    
+                    // Send the 'click' event using the unified sender
+                    sendEvent('click', details);
                 }}
             }});
         }})();
         """
-
     return js_code
 
 
