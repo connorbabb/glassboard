@@ -51,7 +51,6 @@ async def record_single_event(payload: IncomingEvent, db: Session = Depends(get_
     db.commit() 
     return {"status": "ok"}
 
-
 # Keeping reset route for convenience (you might move this to /events or /admin)
 @router.delete("/reset")
 async def reset_events(db: Session = Depends(get_db)):
