@@ -209,11 +209,12 @@ async function loadWebsites() {
 loadWebsites();
 
 
-function resetData() {
+// dashboard.js (Add this at the end of the file)
+document.getElementById("resetButton").addEventListener("click", () => {
     // IMPORTANT: Ensure this base URL is correct for your EC2 instance
     const BASE_URL = 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000';
-    
-    // The correct endpoint is /track/reset due to the router prefix in events.py
+
+    // The correct endpoint is /track/reset
     const endpoint = `${BASE_URL}/track/reset`;
 
     if (confirm("Are you sure you want to delete ALL tracking data? This cannot be undone.")) {
@@ -223,7 +224,6 @@ function resetData() {
         .then(response => {
             if (response.ok) {
                 alert("All events have been successfully reset.");
-                // Reload the stats or the dashboard to reflect the change
                 window.location.reload(); 
             } else {
                 alert("Failed to reset data. Check server logs.");
@@ -234,4 +234,4 @@ function resetData() {
             alert("Connection error occurred.");
         });
     }
-}
+});
