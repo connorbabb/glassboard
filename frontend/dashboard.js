@@ -25,12 +25,22 @@ function updateDashboard() {
   fetch(url)
     .then(res => res.json())
     .then(data => {
-      // === Aggregates ===
+      // === AGGREGATES: CLICKS ===
       document.getElementById("clicks").textContent = data.total_clicks;
       document.getElementById("dayClicks").textContent = data.day_clicks;
       document.getElementById("weekClicks").textContent = data.week_clicks;
       document.getElementById("monthClicks").textContent = data.month_clicks;
       document.getElementById("yearClicks").textContent = data.year_clicks;
+      
+      // ===================================
+      // === NEW AGGREGATES: PAGE VISITS ===
+      // ===================================
+      // These assume your backend returns keys like total_visits, day_visits, etc.
+      document.getElementById("totalVisits").textContent = data.total_visits || 0;
+      document.getElementById("dayVisits").textContent = data.day_visits || 0;
+      document.getElementById("weekVisits").textContent = data.week_visits || 0;
+      document.getElementById("monthVisits").textContent = data.month_visits || 0;
+      document.getElementById("yearVisits").textContent = data.year_visits || 0;
 
       // === Save summary for chart filtering ===
       allSummaryData = data.summary;
@@ -42,7 +52,8 @@ function updateDashboard() {
       // === Show all recorded events again ===
       const allList = document.getElementById("all");
       allList.innerHTML = "";
-      data.all_clicks.forEach(ev => {
+      // We will only show clicks for now, as showing all page views would be noisy
+      data.all_clicks.forEach(ev => { 
         // Only show button or <a> clicks if you wanted that filter
         if (ev.element === "button" || ev.element === "a") {
           const li = document.createElement("li");
