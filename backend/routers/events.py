@@ -1,40 +1,58 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
+from typing import Optional, List
 from ..database import get_db
 from ..models import Event
 from datetime import datetime
 
-router = APIRouter(prefix="/events", tags=["Events"])
+# --- Pydantic Model to enforce structure and validate incoming data ---
+# This ensures that all required fields are present and typed correctly.
+class IncomingEvent(BaseModel):
+    site_id: str
+    event_type: str = Field(alias='event_type') # Matches JS key
+    timestamp: str
+    page: str
+    referrer: Optional[str] = None
+    element: Optional[str] = None
+    text: Optional[str] = None
+    href: Optional[str] = None
+
+# Renaming router prefix to /track for clarity
+router = APIRouter(prefix="/track", tags=["Tracking"])
 
 @router.post("/")
-async def record_events(data: dict, db: Session = Depends(get_db)):
-    site_id = data.get("site_id")
-    events = data.get("events", [])
-
-    for e in events:
-        # Convert timestamp string (like '2025-11-07T21:20:33.230Z') to datetime
-        ts = None
-        if e.get("timestamp"):
-            try:
-                ts = datetime.fromisoformat(e.get("timestamp").replace("Z", "+00:00"))
-            except Exception:
-                ts = datetime.utcnow()  # fallback if parsing fails
-                
-        db_event = Event(
-            site_id=site_id,
-            page=e.get("page"),
-            element=e.get("element"),
-            text=e.get("text"),      # 👈 store text
-            href=e.get("href"),      # 👈 store href
-            event_type=e.get("type"),
-            timestamp=ts,            # 👈 use parsed datetime, not raw string
-        )
-        db.add(db_event)
-
-    db.commit()
+async def record_single_event(payload: IncomingEvent, db: Session = Depends(get_db)):
+    """
+    Handles a single event payload sent directly from the JS snippet.
+    """
+    
+    # Convert timestamp string (like '2025-11-07T21:20:33.230Z') to datetime
+    ts = datetime.utcnow()
+    try:
+        # Use .timestamp from the Pydantic model
+        ts = datetime.fromisoformat(payload.timestamp.replace("Z", "+00:00"))
+    except Exception:
+        pass # Fallback to current time if parsing fails
+            
+    db_event = Event(
+        site_id=payload.site_id,
+        event_type=payload.event_type, # <-- Correct key from Pydantic model
+        page=payload.page,
+        element=payload.element,
+        text=payload.text,
+        href=payload.href,
+        timestamp=ts,
+    )
+    db.add(db_event)
+    
+    # Commit within the request handler is acceptable for a tracking endpoint
+    # to ensure data persistence immediately.
+    db.commit() 
     return {"status": "ok"}
 
 
+# Keeping reset route for convenience (you might move this to /events or /admin)
 @router.delete("/reset")
 async def reset_events(db: Session = Depends(get_db)):
     db.query(Event).delete()
