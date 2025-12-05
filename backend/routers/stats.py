@@ -47,11 +47,17 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     # Grouped summary (Top Clicked Elements)
     grouped_query = (
         click_base_query
-        .with_entities(Event.element, Event.text, func.count(Event.id).label("count"))
+        .with_entities(
+            Event.element,
+            Event.text,
+            func.count(Event.id).label("count"),
+            func.max(Event.timestamp).label("last_click")  # ← Add this
+        )
         .group_by(Event.element, Event.text)
         .order_by(func.count(Event.id).desc())
     )
     grouped = grouped_query.all()
+
 
 
     # =========================================================================
@@ -100,12 +106,26 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
             "timestamp": e[4].isoformat() if e[4] else None
         }
         for e in all_events
+        ],
+
+        "all_visits": [
+        {
+            "page": v.page,
+            "referrer": v.referrer,
+            "timestamp": v.timestamp.isoformat() if v.timestamp else None
+        }
+        for v in visit_base_query.all()
     ],
 
-        
         # Summary for Chart
         "summary": [
-            {"element": g[0], "text": g[1], "count": g[2]}
-            for g in grouped
-        ],
+        {
+            "element": g[0],
+            "text": g[1],
+            "count": g[2],
+            "last_click": g[3].isoformat() if g[3] else None
+        }
+        for g in grouped
+    ],
+
     }

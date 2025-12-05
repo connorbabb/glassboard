@@ -68,7 +68,7 @@ function updateDashboard() {
         li.textContent = `${eventDetail} on page ${ev.page} — ${ev.timestamp}`;
         allList.appendChild(li);
       });
-      renderReferrers(data.all_clicks);
+      renderReferrers(data.all_visits);
     })
     .catch(err => console.error("Error loading stats:", err));
 }
@@ -77,8 +77,8 @@ function updateDashboard() {
 function renderFilteredChart(range) {
   const now = new Date();
   const filtered = allSummaryData.filter(item => {
-    if (!item.timestamp) return true; // keep if no timestamp
-    const ts = new Date(item.timestamp);
+    if (!item.last_click) return true;
+    const ts = new Date(item.last_click);
     const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
 
     switch (range) {
