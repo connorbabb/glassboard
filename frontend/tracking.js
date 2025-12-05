@@ -20,22 +20,16 @@
         // The payload structure is simplified to match the Event model in your FastAPI
         const payload = {
             site_id: SITE_ID,
-            event_type: eventType,
+            event_type: eventType, // <-- CRITICAL: Used to filter 'page_view' vs 'click'
             timestamp: new Date().toISOString(),
             page: window.location.pathname,
-            referrer: (function() {
-                try {
-                    if (!document.referrer) return "direct";
-                    return new URL(document.referrer).hostname;
-                } catch {
-                    return "direct";
-                }
-            })(),
+            referrer: document.referrer, // Include referrer for traffic source tracking
+            
+            // Only relevant for click/interactive events, will be null for 'page_view'
             element: elementDetails.element || null,
             text: elementDetails.text || null,
             href: elementDetails.href || null,
         };
-
 
         fetch(`${BACKEND_URL}/track`, { // <-- Assuming you use a dedicated /track endpoint
             method: "POST",
