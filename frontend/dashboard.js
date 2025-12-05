@@ -68,7 +68,7 @@ function updateDashboard() {
         li.textContent = `${eventDetail} on page ${ev.page} — ${ev.timestamp}`;
         allList.appendChild(li);
       });
-      // ...
+      renderReferrers(data.all_clicks);
     })
     .catch(err => console.error("Error loading stats:", err));
 }
@@ -243,3 +243,25 @@ document.getElementById("resetButton").addEventListener("click", () => {
         });
     }
 });
+
+function renderReferrers(events) {
+    const refList = document.getElementById("referrerList");
+    refList.innerHTML = "";
+
+    const counts = {};
+
+    events.forEach(ev => {
+        if (!ev.referrer) return;
+        counts[ev.referrer] = (counts[ev.referrer] || 0) + 1;
+    });
+
+    const sorted = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    sorted.forEach(([ref, count]) => {
+        const li = document.createElement("li");
+        li.textContent = `${ref}: ${count}`;
+        refList.appendChild(li);
+    });
+}
