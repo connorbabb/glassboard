@@ -92,14 +92,16 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
 
         # Detailed Data
         "all_clicks": [
-            {
-                "element": e[0],
-                "text": e[1],
-                "page": e[2],
-                "timestamp": e[3].isoformat() if e[3] else None
-            }
-            for e in all_events
-        ],
+        {
+            "element": e[0],
+            "text": e[1],
+            "page": e[2],
+            "referrer": e[3],
+            "timestamp": e[4].isoformat() if e[4] else None
+        }
+        for e in all_events
+    ],
+
         
         # Summary for Chart
         "summary": [
