@@ -26,7 +26,7 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     # All click events for the "all_clicks" list
     all_events = (
         click_base_query
-        .with_entities(Event.element, Event.text, Event.page, Event.timestamp)
+        .with_entities(Event.element, Event.text, Event.page, Event.referrer, Event.timestamp)
         .order_by(Event.timestamp.desc())
         .all()
     )
