@@ -14,6 +14,7 @@ class Event(Base):
     href = Column(String, nullable=True) # 👈 optional link target (if any)
     event_type = Column(String)
     timestamp = Column(DateTime(timezone=True), default=datetime.utcnow)
+    referrer = Column(String, nullable=True)
 
 class User(Base):
     __tablename__ = "users"

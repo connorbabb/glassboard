@@ -42,6 +42,7 @@ async def record_single_event(payload: IncomingEvent, db: Session = Depends(get_
         element=payload.element,
         text=payload.text,
         href=payload.href,
+        referrer=payload.referrer,
         timestamp=ts,
     )
     db.add(db_event)
