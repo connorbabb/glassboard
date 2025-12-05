@@ -22,14 +22,7 @@
             event_type: eventType,
             timestamp: new Date().toISOString(),
             page: window.location.pathname,
-            referrer: (function() {
-                try {
-                    if (!document.referrer) return "direct";
-                    return new URL(document.referrer).hostname;
-                } catch {
-                    return "direct";
-                }
-            })(),
+            referrer: document.referrer || "direct",
             element: elementDetails.element || null,
             text: elementDetails.text || null,
             href: elementDetails.href || null,
