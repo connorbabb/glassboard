@@ -56,70 +56,61 @@ def root():
 
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
 def tracking_snippet(site_id: str):
-    # This snippet is the final, working JavaScript code.
     js_code = f"""
-        (function() {{
-            const SITE_ID = "{site_id}"; // Substituted by Python
-            // We use the full, fixed endpoint URL here.
-            const TRACKING_ENDPOINT = 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/track'; 
+(function() {{
+    const SITE_ID = "{site_id}";
+    const TRACKING_ENDPOINT = "http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/track";
 
-            // 1. CORE EVENT SENDER FUNCTION (Sends single, flat payload to /track)
-            function sendEvent(eventType, elementDetails = {{}}) {{
-                const payload = {{
-                    site_id: SITE_ID,
-                    event_type: eventType,
-                    timestamp: new Date().toISOString(),
-                    page: window.location.pathname,
-                    referrer: (function () {{
-                        try {{
-                            if (!document.referrer) return "direct";
-                            return new URL(document.referrer, window.location.origin).hostname;
-                        }} catch {{
-                            return "direct";
-                        }}
-                    }})(),
-
-                    element: elementDetails.element || null,
-                    text: elementDetails.text || null,
-                    href: elementDetails.href || null,
-                }};
-
-                fetch(TRACKING_ENDPOINT, {{
-                    method: "POST",
-                    headers: {{ "Content-Type": "application/json" }},
-                    body: JSON.stringify(payload),
-                }})
-                .then(res => res.json())
-                .catch(err => console.error("Glassboard Tracking failed:", err));
-            }}
-
-            // 2. PAGE VIEW TRACKING (NEW)
-            sendEvent('page_view');
-
-
-            // 3. CLICK TRACKING (UPDATED)
-            document.addEventListener("click", (e) => {{
-                let element = e.target;
-                
-                // Traverse up the DOM to find the button or link
-                while (element && element.tagName !== 'BUTTON' && element.tagName !== 'A' && element.tagName !== 'BODY') {{
-                    element = element.parentElement;
+    function sendEvent(eventType, elementDetails = {{}},) {{
+        const payload = {{
+            site_id: SITE_ID,
+            event_type: eventType,
+            timestamp: new Date().toISOString(),
+            page: window.location.pathname,
+            referrer: (function () {{
+                try {{
+                    if (!document.referrer) return "direct";
+                    return new URL(document.referrer, window.location.origin).hostname;
+                }} catch {{
+                    return "direct";
                 }}
+            }})(),
+            element: elementDetails.element || null,
+            text: elementDetails.text || null,
+            href: elementDetails.href || null
+        }};
 
-                if (element && (element.tagName === 'BUTTON' || element.tagName === 'A')) {{
-                    const details = {{
-                        element: element.tagName.toLowerCase(),
-                        text: element.innerText.substring(0, 100).trim() || element.getAttribute('aria-label') || 'N/A',
-                        href: element.tagName === 'A' ? element.getAttribute('href') : null
-                    }};
-                    
-                    // Send the 'click' event using the unified sender
-                    sendEvent('click', details);
-                }}
-            }});
-        }})();
-        """
+        fetch(TRACKING_ENDPOINT, {{
+            method: "POST",
+            headers: {{ "Content-Type": "application/json" }},
+            body: JSON.stringify(payload)
+        }})
+        .catch(err => console.error("Glassboard Tracking failed:", err));
+    }}
+
+    // Page view
+    sendEvent("page_view");
+
+    // Clicks
+    document.addEventListener("click", (e) => {{
+        let el = e.target;
+        while (el && el.tagName !== "BUTTON" && el.tagName !== "A" && el.tagName !== "BODY") {{
+            el = el.parentElement;
+        }}
+
+        if (el && (el.tagName === "BUTTON" || el.tagName === "A")) {{
+            const details = {{
+                element: el.tagName.toLowerCase(),
+                text: el.innerText.substring(0, 100).trim() || el.getAttribute("aria-label") || "N/A",
+                href: el.tagName === "A" ? el.getAttribute("href") : null
+            }};
+            sendEvent("click", details);
+        }}
+    }});
+}})();
+"""
     return js_code
+
 
 
 @app.get("/test-db")
