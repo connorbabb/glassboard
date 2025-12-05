@@ -68,7 +68,7 @@ function updateDashboard() {
         li.textContent = `${eventDetail} on page ${ev.page} — ${ev.timestamp}`;
         allList.appendChild(li);
       });
-      renderReferrers(data.all_visits);
+      renderReferrers([...data.all_visits, ...data.all_clicks]);
     })
     .catch(err => console.error("Error loading stats:", err));
 }
@@ -245,6 +245,9 @@ document.getElementById("resetButton").addEventListener("click", () => {
 });
 
 function renderReferrers(events) {
+    console.log("Referrer Events:", events);
+    console.log("Extracted referrers:", events.map(e => e.referrer));
+
     const refList = document.getElementById("referrerList");
     refList.innerHTML = "";
 
@@ -265,3 +268,4 @@ function renderReferrers(events) {
         refList.appendChild(li);
     });
 }
+
