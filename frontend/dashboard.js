@@ -71,6 +71,9 @@ function updateDashboard() {
       // ...
     })
     .catch(err => console.error("Error loading stats:", err));
+
+    // === NEW: Render referrer sources ===
+  renderReferrers(data.all_clicks);
 }
 
 // Filter the summary data depending on the dropdown selection
@@ -135,6 +138,28 @@ document.getElementById("summaryRange").addEventListener("change", () => {
 updateDashboard();
 setInterval(updateDashboard, 5000);
 document.getElementById("siteSelect").addEventListener("change", updateDashboard);
+
+// === REFERRER BREAKDOWN ===
+function renderReferrers(events) {
+    const counts = {};
+
+    for (const e of events) {
+        const r = e.referrer || "direct";
+        counts[r] = (counts[r] || 0) + 1;
+    }
+
+    const list = document.getElementById("referrerList");
+    list.innerHTML = "";
+
+    Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([referrer, total]) => {
+            const li = document.createElement("li");
+            li.textContent = `${referrer}: ${total}`;
+            list.appendChild(li);
+        });
+}
+
 
 async function logout() {
     const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/logout", {

@@ -67,21 +67,27 @@ def tracking_snippet(site_id: str):
             function sendEvent(eventType, elementDetails = {{}}) {{
                 const payload = {{
                     site_id: SITE_ID,
-                    event_type: eventType, // CRITICAL: 'page_view' or 'click'
+                    event_type: eventType,
                     timestamp: new Date().toISOString(),
                     page: window.location.pathname,
-                    referrer: document.referrer || null,
-                    
-                    // Click-specific fields
+                    referrer: (function () {{
+                        try {{
+                            if (!document.referrer) return "direct";
+                            return new URL(document.referrer, window.location.origin).hostname;
+                        }} catch {{
+                            return "direct";
+                        }}
+                    }})(),
+
                     element: elementDetails.element || null,
                     text: elementDetails.text || null,
                     href: elementDetails.href || null,
                 }};
 
                 fetch(TRACKING_ENDPOINT, {{
-                    method: 'POST',
-                    headers: {{ 'Content-Type': 'application/json' }},
-                    body: JSON.stringify(payload), // Send single, flat payload
+                    method: "POST",
+                    headers: {{ "Content-Type": "application/json" }},
+                    body: JSON.stringify(payload),
                 }})
                 .then(res => res.json())
                 .catch(err => console.error("Glassboard Tracking failed:", err));
