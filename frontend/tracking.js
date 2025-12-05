@@ -17,29 +17,35 @@
     // 2. CORE EVENT SENDER
     // Now takes the eventType and element details (which will be null for page_view)
     function sendEvent(eventType, elementDetails = {}) {
-        // The payload structure is simplified to match the Event model in your FastAPI
         const payload = {
             site_id: SITE_ID,
-            event_type: eventType, // <-- CRITICAL: Used to filter 'page_view' vs 'click'
+            event_type: eventType,
             timestamp: new Date().toISOString(),
             page: window.location.pathname,
-            referrer: document.referrer, // Include referrer for traffic source tracking
-            
-            // Only relevant for click/interactive events, will be null for 'page_view'
+            referrer: (function() {
+                try {
+                    if (!document.referrer) return "direct";
+                    return new URL(document.referrer).hostname;
+                } catch {
+                    return "direct";
+                }
+            })(),
             element: elementDetails.element || null,
             text: elementDetails.text || null,
             href: elementDetails.href || null,
         };
 
-        fetch(`${BACKEND_URL}/track`, { // <-- Assuming you use a dedicated /track endpoint
+        console.log("Tracking payload:", payload); // <-- Add this line
+
+        fetch(`${BACKEND_URL}/track`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         })
         .then(res => res.json())
-        .then(data => { /* console.log(`Glassboard ${eventType} recorded:`, data) */ })
         .catch(err => console.error("Glassboard Tracking failed:", err));
     }
+
 
     // ===================================
     // 3. PAGE VIEW TRACKING (NEW)
