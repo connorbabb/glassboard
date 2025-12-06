@@ -269,3 +269,32 @@ function renderReferrers(events) {
     });
 }
 
+document.querySelectorAll(".label").forEach(span => {
+  span.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.value = span.innerText;
+    span.replaceWith(input);
+    input.focus();
+
+    input.addEventListener("blur", async () => {
+      const customText = input.value;
+      const spanNew = document.createElement("span");
+      spanNew.className = "label";
+      spanNew.dataset.element = input.dataset.element;
+      spanNew.dataset.original = input.dataset.original;
+      spanNew.innerText = customText;
+      input.replaceWith(spanNew);
+
+      await fetch("/stats/label", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          site_id: SITE_ID,
+          element: spanNew.dataset.element,
+          original_text: spanNew.dataset.original,
+          custom_text: customText
+        })
+      });
+    });
+  });
+});

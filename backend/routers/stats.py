@@ -3,10 +3,11 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..database import get_db
-from ..models import Event
+from ..models import Event, EventLabel
 import csv
 import io
 from weasyprint import HTML
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
@@ -47,19 +48,38 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     month_clicks = count_clicks_since(days=30)
     year_clicks = count_clicks_since(days=365)
 
-    # Grouped summary (Top Clicked Elements)
+    # --- Group top clicked elements ---
     grouped_query = (
         click_base_query
         .with_entities(
             Event.element,
             Event.text,
             func.count(Event.id).label("count"),
-            func.max(Event.timestamp).label("last_click")  # ← Add this
+            func.max(Event.timestamp).label("last_click")
         )
         .group_by(Event.element, Event.text)
         .order_by(func.count(Event.id).desc())
     )
     grouped = grouped_query.all()
+
+    summary = []
+    for g in grouped:
+        # g[0] = element, g[1] = original text
+        label = db.query(EventLabel).filter_by(
+            site_id=site_id or "",  # fallback if site_id is None
+            element=g[0],
+            original_text=g[1]
+        ).first()
+        custom_text = label.custom_text if label else g[1]
+
+        summary.append({
+            "element": g[0],
+            "text": custom_text,        # send custom name if exists
+            "original_text": g[1],     # always include original for reference
+            "count": g[2],
+            "last_click": g[3].isoformat() if g[3] else None
+        })
+
 
 
 
@@ -120,17 +140,7 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
         for v in visit_base_query.all()
     ],
 
-        # Summary for Chart
-        "summary": [
-        {
-            "element": g[0],
-            "text": g[1],
-            "count": g[2],
-            "last_click": g[3].isoformat() if g[3] else None
-        }
-        for g in grouped
-    ],
-
+    "summary": summary,
     }
 
 # ---------------- CSV Export Route ----------------
@@ -230,3 +240,36 @@ def export_pdf(site_id: str = Query(None), db: Session = Depends(get_db)):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+    
+
+class LabelUpdate(BaseModel):
+    site_id: str
+    element: str
+    original_text: str
+    custom_text: str
+
+@router.post("/label")
+def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
+    label = (
+        db.query(EventLabel)
+        .filter_by(
+            site_id=payload.site_id,
+            element=payload.element,
+            original_text=payload.original_text
+        )
+        .first()
+    )
+
+    if label:
+        label.custom_text = payload.custom_text
+    else:
+        label = EventLabel(
+            site_id=payload.site_id,
+            element=payload.element,
+            original_text=payload.original_text,
+            custom_text=payload.custom_text
+        )
+        db.add(label)
+
+    db.commit()
+    return {"status": "ok", "custom_text": payload.custom_text}

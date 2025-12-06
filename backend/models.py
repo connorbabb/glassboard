@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
@@ -37,3 +37,16 @@ class Website(Base):
 
     # ORM relationship (not required, just nice to have)
     owner = relationship("User", back_populates="websites")
+
+class EventLabel(Base):
+    __tablename__ = "event_labels"
+
+    id = Column(Integer, primary_key=True, index=True)
+    site_id = Column(String, nullable=False)
+    element = Column(String, nullable=False)
+    original_text = Column(String, nullable=False)
+    custom_text = Column(String, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("site_id", "element", "original_text", name="uix_event_label"),
+    )
