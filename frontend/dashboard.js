@@ -10,7 +10,37 @@ async function ensureLoggedIn() {
   }
 }
 
-  ensureLoggedIn();
+// dashboard.js
+
+// ... (Function definitions for ensureLoggedIn, updateDashboard, renderFilteredChart, renderChart, loadWebsites, logout, etc.)
+
+// --- Initialization Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+    // This ensures all HTML elements are loaded before we try to interact with them.
+    
+    // Ensure login status is checked immediately
+    ensureLoggedIn();
+    
+    // Load existing websites into the dropdown
+    loadWebsites();
+    
+    // Start the first data fetch and render the initial chart
+    updateDashboard(); 
+    
+    // Set up recurring data fetch (Interval for updateDashboard)
+    setInterval(updateDashboard, 5000);
+    
+    // Set up event listeners for filters and site selection
+    document.getElementById("summaryRange").addEventListener("change", () => {
+        renderFilteredChart(document.getElementById("summaryRange").value);
+    });
+    document.getElementById("siteSelect").addEventListener("change", updateDashboard);
+
+    // Set up button listeners
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+    document.getElementById("resetButton").addEventListener("click", () => { /* ... reset logic ... */ });
+    document.getElementById('registerWebsiteForm').addEventListener('submit', async (e) => { /* ... form logic ... */ });
+});
 
   let chartInstance = null;
   let allSummaryData = []; // stores all-time summary for chart
@@ -56,11 +86,7 @@ function updateDashboard() {
         .catch(err => console.error("Error loading stats:", err));
 }
 
-// 6️⃣ Initialize
-updateDashboard();
-setInterval(updateDashboard, 5000);
 document.getElementById("summaryRange").addEventListener("change", () => renderFilteredChart(document.getElementById("summaryRange").value));
-document.getElementById("siteSelect").addEventListener("change", updateDashboard);
 
 
   function renderFilteredChart(range) {
@@ -197,10 +223,6 @@ function renderChart(summaryData) {
     renderFilteredChart(range);
   });
 
-  updateDashboard();
-  setInterval(updateDashboard, 5000);
-  document.getElementById("siteSelect").addEventListener("change", updateDashboard);
-
   async function logout() {
       const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/logout", {
           method: "POST",
@@ -279,8 +301,6 @@ function renderChart(summaryData) {
       });
     }
   }
-  loadWebsites();
-
 
   // dashboard.js (Add this at the end of the file)
   document.getElementById("resetButton").addEventListener("click", () => {
