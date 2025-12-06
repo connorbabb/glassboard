@@ -124,6 +124,56 @@ function renderChart(summaryData) {
       }
     }
   });
+
+  // --- Populate editable labels ---
+  const topLabelsUl = document.getElementById("topLabels");
+  topLabelsUl.innerHTML = "";
+  summaryData.forEach(item => {
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    span.className = "label";
+    span.dataset.element = item.element;
+    span.dataset.original = item.text || item.element;
+    span.innerText = item.text || item.element;
+    li.appendChild(span);
+    topLabelsUl.appendChild(li);
+
+    span.addEventListener("click", () => {
+  const input = document.createElement("input");
+  input.value = span.innerText;
+  span.replaceWith(input);
+  input.focus();
+
+  // <-- Replace this blur handler with the one you just posted
+  input.addEventListener("blur", async () => {
+    const customText = input.value;
+    const spanNew = document.createElement("span");
+    spanNew.className = "label";
+    spanNew.dataset.element = item.element;
+    spanNew.dataset.original = item.text || item.element;
+    spanNew.innerText = customText;
+    input.replaceWith(spanNew);
+
+    // Update chart label immediately
+    const index = labels.indexOf(span.dataset.original);
+    if (index >= 0) {
+      chartInstance.data.labels[index] = customText;
+      chartInstance.update();
+    }
+
+    await fetch("/stats/label", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        site_id: document.getElementById("siteSelect").value || null,
+        element: spanNew.dataset.element,
+        original_text: spanNew.dataset.original,
+        custom_text: customText
+      })
+    });
+  });
+});
+});
 }
 
 // Update chart when dropdown changes

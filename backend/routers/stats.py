@@ -62,9 +62,6 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     )
     grouped = grouped_query.all()
 
-    # DEBUG: print the grouped results
-    print("Grouped:", grouped)
-
     summary = []
     for g in grouped:
         # g[0] = element, g[1] = original text
