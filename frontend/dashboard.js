@@ -73,7 +73,6 @@ function updateDashboard() {
     .catch(err => console.error("Error loading stats:", err));
 }
 
-// Filter the summary data depending on the dropdown selection
 function renderFilteredChart(range) {
   const now = new Date();
   const filtered = allSummaryData.filter(item => {
@@ -90,9 +89,18 @@ function renderFilteredChart(range) {
     }
   });
 
+  // Apply any custom labels before rendering
+  filtered.forEach(item => {
+    if (customLabels[item.element]) {
+      item.text = customLabels[item.element];
+    }
+  });
+
   const topFive = filtered.slice(0, 5);
   renderChart(topFive);
 }
+
+const customLabels = {};
 
 function renderChart(summaryData) {
   const ctx = document.getElementById("topChart").getContext("2d");
@@ -125,50 +133,47 @@ function renderChart(summaryData) {
     }
   });
 
-  // --- Populate editable labels ---
   const topLabelsUl = document.getElementById("topLabels");
   topLabelsUl.innerHTML = "";
+
   summaryData.forEach(item => {
     const li = document.createElement("li");
     const span = document.createElement("span");
     span.className = "label";
     span.dataset.element = item.element;
     span.dataset.original = item.text || item.element;
-    span.innerText = item.text || item.element;
+    span.innerText = customLabels[item.element] || item.text || item.element;
     li.appendChild(span);
     topLabelsUl.appendChild(li);
 
     span.addEventListener("click", () => {
-  const input = document.createElement("input");
-  input.value = span.innerText;
-  span.replaceWith(input);
-  input.focus();
+      const input = document.createElement("input");
+      input.value = span.innerText;
+      span.replaceWith(input);
+      input.focus();
 
-  // <-- Replace this blur handler with the one you just posted
-  input.addEventListener("blur", async () => {
-    const customText = input.value;
-    const spanNew = document.createElement("span");
-    spanNew.className = "label";
-    spanNew.dataset.element = item.element;
-    spanNew.dataset.original = item.text || item.element;
-    spanNew.innerText = customText;
-    input.replaceWith(spanNew);
+      input.addEventListener("blur", async () => {
+        const customText = input.value;
+        customLabels[item.element] = customText; // save locally
+        const spanNew = document.createElement("span");
+        spanNew.className = "label";
+        spanNew.dataset.element = item.element;
+        spanNew.dataset.original = item.text || item.element;
+        spanNew.innerText = customText;
+        input.replaceWith(spanNew);
 
-    // Update chart label immediately
-    const index = labels.indexOf(span.dataset.original);
-    if (index >= 0) {
-      chartInstance.data.labels[index] = customText;
-      chartInstance.update();
-    }
+        chartInstance.data.labels[summaryData.indexOf(item)] = customText;
+        chartInstance.update();
 
-    await fetch("/stats/label", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        site_id: document.getElementById("siteSelect").value || null,
-        element: spanNew.dataset.element,
-        original_text: spanNew.dataset.original,
-        custom_text: customText
+        // send to server
+        await fetch("/stats/label", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            site_id: document.getElementById("siteSelect").value || null,
+            element: spanNew.dataset.element,
+            original_text: spanNew.dataset.original,
+            custom_text: customText
       })
     });
   });
