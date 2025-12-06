@@ -191,20 +191,36 @@ def export_pdf(site_id: str = Query(None), db: Session = Depends(get_db)):
         ) + "</tr>"
 
     html = f"""
-    <html>
-        <head><meta charset="utf-8"></head>
-        <body>
-            <h1>Event Export</h1>
-            <table border="1" cellspacing="0" cellpadding="4">
-                <tr>
-                    <th>id</th><th>event_type</th><th>page</th><th>referrer</th>
-                    <th>element</th><th>text</th><th>href</th><th>timestamp</th>
-                </tr>
-                {rows}
-            </table>
-        </body>
-    </html>
-    """
+        <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    table {{
+                        border-collapse: collapse;
+                        width: 100%;
+                        table-layout: fixed; /* Force fixed column widths */
+                    }}
+                    th, td {{
+                        border: 1px solid #333;
+                        padding: 4px;
+                        font-size: 10pt;
+                        word-wrap: break-word; /* Allow text to wrap */
+                    }}
+                </style>
+            </head>
+            <body>
+                <h1>Event Export</h1>
+                <table border="1" cellspacing="0" cellpadding="4">
+                    <tr>
+                        <th>id</th><th>event_type</th><th>page</th><th>referrer</th>
+                        <th>element</th><th>text</th><th>href</th><th>timestamp</th>
+                    </tr>
+                    {rows}
+                </table>
+            </body>
+        </html>
+"""
+
 
     pdf = HTML(string=html).write_pdf()
     filename = f"events_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
