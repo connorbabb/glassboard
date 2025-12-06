@@ -159,9 +159,9 @@ function renderChart(summaryData) {
     const span = document.createElement("span");
     span.className = "label";
     span.dataset.index = i;
-    span.dataset.element = item.element;          // store element reference
-    span.dataset.originalText = item.text;        // store the original text
-    span.innerText = item.text;                   // initial text
+    span.dataset.element = item.element;
+    span.dataset.originalText = item.text;
+    span.innerText = item.text;
     li.appendChild(span);
     topLabelsUl.appendChild(li);
 
@@ -182,13 +182,13 @@ function renderChart(summaryData) {
         customLabels[span.dataset.element] = newText;
         localStorage.setItem('customLabels', JSON.stringify(customLabels));
 
+        // --- Corrected fetch ---
         const siteValue = document.getElementById("siteSelect").value;
-
         await fetch("/stats/label", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
-            site_id: siteValue !== "" ? siteValue : undefined,
+            site_id: siteValue !== "" ? siteValue : null,
             element: span.dataset.element,
             original_text: span.dataset.originalText || span.dataset.element,
             custom_text: newText
@@ -197,6 +197,8 @@ function renderChart(summaryData) {
       });
     });
   });
+}
+
 
 // Update chart when dropdown changes
 document.getElementById("summaryRange").addEventListener("change", () => {
@@ -337,4 +339,3 @@ function renderReferrers(events) {
         refList.appendChild(li);
     });
   }
-}
