@@ -76,6 +76,7 @@ function updateDashboard() {
             
             // Assuming this function exists to show referrer list
             renderReferrers(data.all_visits); // Use all_visits or all_clicks data for referrer list
+            renderAllEvents(data.all_clicks, data.all_visits); // ADD THIS LINE
             
         })
         .catch(err => console.error("Error loading stats:", err));
@@ -354,3 +355,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// --- 3. UTILITY FUNCTIONS --- 
+// ... (Your other utility functions like logout, loadWebsites, renderReferrers)
+
+/**
+ * Renders the list of all recent events (clicks and page views).
+ * @param {Array} clicks - Array of click events from data.all_clicks
+ * @param {Array} visits - Array of page view events from data.all_visits
+ */
+function renderAllEvents(clicks, visits) {
+    const allList = document.getElementById("all");
+    if (!allList) return; // Exit if the UL element is not found
+
+    allList.innerHTML = ""; // Clear existing list
+
+    // Combine and sort events by timestamp descending
+    const allEvents = [...clicks, ...visits]
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 15); // Show only the 15 most recent events
+
+    allEvents.forEach(event => {
+        const li = document.createElement("li");
+        const time = new Date(event.timestamp).toLocaleTimeString();
+        const date = new Date(event.timestamp).toLocaleDateString();
+
+        let eventDetail = '';
+        if (event.event_type === 'click') {
+            eventDetail = `CLICKED: "${event.text}" on <${event.element}>`;
+        } else if (event.event_type === 'page_view') {
+            eventDetail = `VIEWED: ${event.url}`;
+        }
+        
+        li.textContent = `[${date} ${time}] - ${eventDetail}`;
+        allList.appendChild(li);
+    });
+}
