@@ -42,12 +42,21 @@ function updateDashboard() {
       document.getElementById("monthVisits").textContent = data.month_visits || 0;
       document.getElementById("yearVisits").textContent = data.year_visits || 0;
 
-      // === Save summary for chart filtering ===
       allSummaryData = data.summary;
 
+      // Apply saved custom labels from localStorage
       allSummaryData.forEach(item => {
-        if (item.custom_text) customLabels[item.element] = item.custom_text;
+        if (customLabels[item.element]) {
+          item.text = customLabels[item.element];
+        } else if (item.custom_text) {
+          item.text = item.custom_text;
+          customLabels[item.element] = item.custom_text;
+          localStorage.setItem('customLabels', JSON.stringify(customLabels));
+        } else {
+          item.text = item.text || item.element;
+        }
       });
+
 
       // === Render chart based on current dropdown ===
       const range = document.getElementById("summaryRange").value;
