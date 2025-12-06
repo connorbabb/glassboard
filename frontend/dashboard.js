@@ -88,33 +88,29 @@ function updateDashboard() {
 
 function renderFilteredChart(range) {
   const now = new Date();
-  const filtered = allSummaryData.filter(item => {
-    if (customLabels[item.element] && !editingElements.has(item.element)) {
-      item.text = customLabels[item.element];
-    }
-    if (!item.last_click) return true;
-    const ts = new Date(item.last_click);
-    const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
+  const filtered = allSummaryData
+    .filter(item => {
+      if (customLabels[item.element] && !editingElements.has(item.element)) {
+        item.text = customLabels[item.element];
+      }
+      if (!item.last_click) return true;
+      const ts = new Date(item.last_click);
+      const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
 
-    switch (range) {
-      case "day": return diffDays <= 1;
-      case "week": return diffDays <= 7;
-      case "month": return diffDays <= 30;
-      case "year": return diffDays <= 365;
-      default: return true; // all time
-    }
-  });
-
-  // Apply any custom labels before rendering
-  filtered.forEach(item => {
-    if (customLabels[item.element]) {
-      item.text = customLabels[item.element];
-    }
-  });
+      switch (range) {
+        case "day": return diffDays <= 1;
+        case "week": return diffDays <= 7;
+        case "month": return diffDays <= 30;
+        case "year": return diffDays <= 365;
+        default: return true;
+      }
+    })
+    .map(item => ({ ...item }));
 
   const topFive = filtered.slice(0, 5);
   renderChart(topFive);
 }
+
 
 const customLabels = {};
 
