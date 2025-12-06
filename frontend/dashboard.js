@@ -186,9 +186,9 @@ function renderChart(summaryData) {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
-            site_id: document.getElementById("siteSelect").value || null,
+            site_id: document.getElementById("siteSelect").value || undefined,
             element: span.dataset.element,
-            original_text: span.dataset.originalText,
+            original_text: span.dataset.originalText || span.dataset.element,
             custom_text: newText
           })
         });
