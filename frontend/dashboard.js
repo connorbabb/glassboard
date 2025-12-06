@@ -376,6 +376,7 @@ function renderAllEvents(clicks, visits) {
         .slice(0, 10); // Limit to 10 most recent events
 
     allEvents.forEach(event => {
+        console.log("Event Data:", event);
         const li = document.createElement("li");
         
         // Format time and date
