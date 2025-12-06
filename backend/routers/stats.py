@@ -251,19 +251,7 @@ class LabelUpdate(BaseModel):
 
 @router.post("/label")
 def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
-    # 1️⃣ Check for duplicate custom_text for this site
-    existing = db.query(EventLabel).filter(
-        EventLabel.site_id == payload.site_id,
-        EventLabel.custom_text == payload.custom_text
-    ).first()
-
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Label '{payload.custom_text}' already exists for this site."
-        )
-
-    # 2️⃣ Fetch the current label (if any)
+    # Fetch label for the exact element+original text
     label = (
         db.query(EventLabel)
         .filter_by(
@@ -274,6 +262,11 @@ def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
         .first()
     )
 
+    # If no change, return early
+    if label and label.custom_text == payload.custom_text:
+        return {"status": "ok", "custom_text": payload.custom_text}
+
+    # Update existing or create new
     if label:
         label.custom_text = payload.custom_text
     else:
