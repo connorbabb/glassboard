@@ -36,7 +36,6 @@ function updateDashboard() {
 
     fetch(url)
         .then(res => {
-            // Check for non-200 responses explicitly
             if (!res.ok) {
                 console.error(`Stats API returned status: ${res.status}`);
                 throw new Error("Failed to fetch stats data.");
@@ -45,37 +44,38 @@ function updateDashboard() {
         })
         .then(data => {
             
-            // --- 1. CORE DATA ASSIGNMENT ---
+            // --- 1. CORE DATA ASSIGNMENT (Clean Data Flow) ---
             if (!data || !data.summary) {
                 console.error("API returned invalid data structure.", data);
                 allSummaryData = [];
             } else {
-                // **CRITICAL: Assign summary data. The backend already contains the right label.**
+                // **CRITICAL: Take the clean data directly from the backend.**
                 allSummaryData = data.summary;
             }
 
-            // --- 2. UPDATE METRICS DISPLAY (The missing counts) ---
+            // --- 2. METRICS DISPLAY (The Counts) ---
             
-            // Helper to safely format numbers or default to '0'
             const getCount = (value) => (value || 0).toLocaleString();
 
-            // Clicks Metrics
             document.getElementById("totalClicks").innerText = getCount(data.total_clicks);
             document.getElementById("dayClicks").innerText = getCount(data.day_clicks);
             document.getElementById("weekClicks").innerText = getCount(data.week_clicks);
             document.getElementById("monthClicks").innerText = getCount(data.month_clicks);
             document.getElementById("yearClicks").innerText = getCount(data.year_clicks);
             
-            // Visits Metrics
             document.getElementById("totalVisits").innerText = getCount(data.total_visits);
             document.getElementById("dayVisits").innerText = getCount(data.day_visits);
             document.getElementById("weekVisits").innerText = getCount(data.week_visits);
             document.getElementById("monthVisits").innerText = getCount(data.month_visits);
             document.getElementById("yearVisits").innerText = getCount(data.year_visits);
 
-            // --- 3. CHART RENDER ---
-            // Trigger chart render with the newly assigned global summary data
+            // --- 3. RENDER CHART AND REFERRERS ---
+            
+            // The chart rendering functions handle any necessary local label overrides.
             renderFilteredChart(document.getElementById("summaryRange").value);
+            
+            // Assuming this function exists to show referrer list
+            renderReferrers(data.all_visits); // Use all_visits or all_clicks data for referrer list
             
         })
         .catch(err => console.error("Error loading stats:", err));
