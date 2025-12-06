@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..database import get_db
@@ -251,6 +251,19 @@ class LabelUpdate(BaseModel):
 
 @router.post("/label")
 def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
+    # 1️⃣ Check for duplicate custom_text for this site
+    existing = db.query(EventLabel).filter(
+        EventLabel.site_id == payload.site_id,
+        EventLabel.custom_text == payload.custom_text
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Label '{payload.custom_text}' already exists for this site."
+        )
+
+    # 2️⃣ Fetch the current label (if any)
     label = (
         db.query(EventLabel)
         .filter_by(

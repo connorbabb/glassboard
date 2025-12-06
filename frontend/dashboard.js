@@ -8,8 +8,6 @@ async function ensureLoggedIn() {
     }
 }
 
-setTimeout(ensureLoggedIn, 300);
-
 ensureLoggedIn();
 
 let chartInstance = null;
@@ -193,11 +191,25 @@ function renderChart(summaryData) {
             original_text: span.dataset.originalText || span.dataset.element,
             custom_text: newText
           })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.detail) {
+                alert(data.detail);
+                // revert input back to old value
+                input.value = span.innerText;
+                return;
+            }
+            // update chart & localStorage as before
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Failed to update label");
+        });
+          })
         });
       });
-    });
-  });
-}
+    };
 
 
 // Update chart when dropdown changes
