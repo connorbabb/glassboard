@@ -373,7 +373,7 @@ function renderAllEvents(clicks, visits) {
     // Combine and sort events by timestamp descending
     const allEvents = [...clicks, ...visits]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        .slice(0, 10); // *** FIXED: Limit to 10 most recent events ***
+        .slice(0, 10); // Limit to 10 most recent events
 
     allEvents.forEach(event => {
         const li = document.createElement("li");
@@ -384,14 +384,21 @@ function renderAllEvents(clicks, visits) {
 
         let eventDetail = '';
         
-        // *** FIXED: Ensure event properties are correctly used based on type ***
+        // --- CRITICAL NAMING CHECK ---
         if (event.event_type === 'click') {
-            // Clicks have 'text' and 'element'
-            const textDisplay = event.text ? `"${event.text}"` : 'NO TEXT';
-            eventDetail = `CLICKED: ${textDisplay} on <${event.element}>`;
+            // Check for common naming conventions if event.text and event.element are null
+            const textValue = event.text || event.event_text; // Check 'text' or 'event_text'
+            const elementValue = event.element || event.html_element; // Check 'element' or 'html_element'
+            
+            const textDisplay = textValue ? `"${textValue}"` : 'NO TEXT';
+            const elementDisplay = elementValue ? `<${elementValue}>` : '<NO ELEMENT>';
+            
+            eventDetail = `CLICKED: ${textDisplay} on ${elementDisplay}`;
+            
         } else if (event.event_type === 'page_view') {
-            // Page views have 'url'
-            eventDetail = `VIEWED: ${event.url || 'NO URL'}`;
+            // Check for common naming conventions if event.url is null
+            const urlValue = event.url || event.page_url || event.domain_url; // Check 'url' or common variants
+            eventDetail = `VIEWED: ${urlValue || 'NO URL'}`;
         }
         
         // Final list item output
