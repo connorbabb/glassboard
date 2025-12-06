@@ -61,7 +61,7 @@ def tracking_snippet(site_id: str):
         (function() {{
             const SITE_ID = "{site_id}"; // Substituted by Python
             // We use the full, fixed endpoint URL here.
-            const TRACKING_ENDPOINT = 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/track'; 
+            const TRACKING_ENDPOINT = 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/track/'; 
 
             // 1. CORE EVENT SENDER FUNCTION (Sends single, flat payload to /track)
             function sendEvent(eventType, elementDetails = {{}}) {{
