@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..database import get_db
 from ..models import Event
+import csv
+import io
+from weasyprint import HTML
 
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
@@ -129,3 +132,85 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     ],
 
     }
+
+# ---------------- CSV Export Route ----------------
+@router.get("/export/csv")
+def export_csv(site_id: str = Query(None), db: Session = Depends(get_db)):
+    base_query = db.query(Event)
+    if site_id:
+        base_query = base_query.filter(Event.site_id == site_id)
+
+    events = base_query.order_by(Event.timestamp.desc()).all()
+
+    if not events:
+        return Response(content="No events found", media_type="text/plain")
+
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["id","event_type","page","referrer","element","text","href","timestamp"])
+    writer.writeheader()
+
+    for e in events:
+        writer.writerow({
+            "id": e.id,
+            "event_type": e.event_type,
+            "page": e.page,
+            "referrer": e.referrer,
+            "element": e.element,
+            "text": e.text,
+            "href": e.href,
+            "timestamp": e.timestamp.isoformat() if e.timestamp else ""
+        })
+
+    filename = f"events_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+# ---------------- PDF Export Route ----------------
+@router.get("/export/pdf")
+def export_pdf(site_id: str = Query(None), db: Session = Depends(get_db)):
+    base_query = db.query(Event)
+    if site_id:
+        base_query = base_query.filter(Event.site_id == site_id)
+
+    events = base_query.order_by(Event.timestamp.desc()).all()
+
+    if not events:
+        return Response(content="No events found", media_type="text/plain")
+
+    # Build simple HTML table
+    rows = ""
+    for e in events:
+        rows += "<tr>" + "".join(
+            f"<td>{v}</td>" for v in [
+                e.id, e.event_type, e.page, e.referrer, e.element, e.text, e.href,
+                e.timestamp.isoformat() if e.timestamp else ""
+            ]
+        ) + "</tr>"
+
+    html = f"""
+    <html>
+        <head><meta charset="utf-8"></head>
+        <body>
+            <h1>Event Export</h1>
+            <table border="1" cellspacing="0" cellpadding="4">
+                <tr>
+                    <th>id</th><th>event_type</th><th>page</th><th>referrer</th>
+                    <th>element</th><th>text</th><th>href</th><th>timestamp</th>
+                </tr>
+                {rows}
+            </table>
+        </body>
+    </html>
+    """
+
+    pdf = HTML(string=html).write_pdf()
+    filename = f"events_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
