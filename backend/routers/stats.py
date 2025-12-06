@@ -26,11 +26,11 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     # =========================================================================
 
     # Clicks: Filtered by interactive elements (buttons and links)
-    click_base_query = base_query_unfiltered.filter(Event.element.in_(["button", "a"]))
-
+    click_base_query = base_query_unfiltered.filter(Event.event_type == 'click')
     # All click events for the "all_clicks" list
+
     all_events = (
-        base_query_unfiltered
+        click_base_query
         .with_entities(Event.element, Event.text, Event.page, Event.referrer, Event.timestamp)
         .order_by(Event.timestamp.desc())
         .all()
@@ -65,12 +65,19 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
 
     summary = []
     for g in grouped:
-        # g[0] = element, g[1] = original text
-        label = db.query(EventLabel).filter_by(
-            site_id=site_id or "",  # fallback if site_id is None
-            element=g[0],
-            original_text=g[1]
-        ).first()
+        # 🛠️ FIX: Correctly handle retrieval of NULL site_id
+        label_query = db.query(EventLabel).filter(
+            EventLabel.element == g[0],
+            EventLabel.original_text == g[1]
+        )
+        
+        if site_id is None:
+            label_query = label_query.filter(EventLabel.site_id.is_(None))
+        else:
+            label_query = label_query.filter(EventLabel.site_id == site_id)
+        
+        label = label_query.first()
+        
         custom_text = label.custom_text if label else g[1]
 
         summary.append({
@@ -90,6 +97,8 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
 
     # Visits: Filtered by event_type == 'page_view'
     visit_base_query = base_query_unfiltered.filter(Event.event_type == 'page_view')
+
+    total_visits = visit_base_query.count() # Total all-time page views
 
     # Function to count Page Visits since a given time period
     def count_visits_since(days: int = 0, weeks: int = 0):
