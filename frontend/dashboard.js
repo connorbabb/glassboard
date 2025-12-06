@@ -22,10 +22,6 @@ async function ensureLoggedIn() {
     }
 }
 
-/**
- * Fetches stats data from the server, updates the global summary data,
- * assigns all metric totals to the relevant HTML elements, and triggers the chart render.
- */
 function updateDashboard() {
     // Determine the URL based on the selected site ID
     const siteId = document.getElementById("siteSelect").value;
@@ -35,7 +31,6 @@ function updateDashboard() {
 
     fetch(url)
         .then(res => {
-            // Check for non-200 responses explicitly
             if (!res.ok) {
                 console.error(`Stats API returned status: ${res.status}`);
                 throw new Error("Failed to fetch stats data.");
@@ -45,57 +40,31 @@ function updateDashboard() {
         .then(data => {
             
             // --- 1. CORE DATA ASSIGNMENT ---
-            // If data is invalid, clear the summary data
             if (!data || !data.summary) {
                 console.error("API returned invalid data structure.", data);
                 allSummaryData = [];
             } else {
+                // *** CRITICAL CHANGE: USE THE SUMMARY DATA DIRECTLY ***
                 allSummaryData = data.summary;
             }
 
-            // --- 2. UPDATE METRICS DISPLAY (THE MISSING PIECE) ---
-            
-            // Helper to safely format numbers or default to '0'
+            // --- 2. UPDATE METRICS DISPLAY (Check if data is null/undefined) ---
             const getCount = (value) => (value || 0).toLocaleString();
 
-            // Clicks Metrics
             document.getElementById("totalClicks").innerText = getCount(data.total_clicks);
             document.getElementById("dayClicks").innerText = getCount(data.day_clicks);
             document.getElementById("weekClicks").innerText = getCount(data.week_clicks);
             document.getElementById("monthClicks").innerText = getCount(data.month_clicks);
             document.getElementById("yearClicks").innerText = getCount(data.year_clicks);
             
-            // Visits Metrics
             document.getElementById("totalVisits").innerText = getCount(data.total_visits);
             document.getElementById("dayVisits").innerText = getCount(data.day_visits);
             document.getElementById("weekVisits").innerText = getCount(data.week_visits);
             document.getElementById("monthVisits").innerText = getCount(data.month_visits);
             document.getElementById("yearVisits").innerText = getCount(data.year_visits);
 
-
-            // --- 3. LABEL APPLICATION & CHART RENDER ---
-
-            // Apply saved labels from localStorage (using the global customLabels)
-            allSummaryData.forEach(item => {
-                const uniqueKey = `${item.element}::${item.original_text}`; 
-                
-                // Prioritize localStorage label
-                if (customLabels[uniqueKey]) {
-                    item.text = customLabels[uniqueKey];
-                } 
-                // Then use custom_text from backend (and save it to localStorage for next time)
-                else if (item.custom_text) {
-                    item.text = item.custom_text;
-                    customLabels[uniqueKey] = item.custom_text; 
-                    localStorage.setItem('customLabels', JSON.stringify(customLabels));
-                } 
-                // Fallback to original text or element tag
-                else {
-                    item.text = item.text || item.element;
-                }
-            });
-            
-            // Render the filtered chart after receiving and processing data
+            // --- 3. CHART RENDER ---
+            // Trigger chart render with the newly assigned global summary data
             renderFilteredChart(document.getElementById("summaryRange").value);
             
         })
