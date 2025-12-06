@@ -8,6 +8,7 @@ import csv
 import io
 from weasyprint import HTML
 from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
@@ -243,7 +244,7 @@ def export_pdf(site_id: str = Query(None), db: Session = Depends(get_db)):
     
 
 class LabelUpdate(BaseModel):
-    site_id: str
+    site_id: Optional[str]
     element: str
     original_text: str
     custom_text: str

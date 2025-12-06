@@ -173,20 +173,22 @@ function renderChart(summaryData) {
 
       input.addEventListener("blur", async () => {
         const newText = input.value;
-        span.innerText = newText;  // only this span is updated
+        span.innerText = newText;
         input.replaceWith(span);
 
         chartInstance.data.labels[span.dataset.index] = newText;
         chartInstance.update();
 
-        customLabels[span.dataset.element] = newText;  // update label map
+        customLabels[span.dataset.element] = newText;
         localStorage.setItem('customLabels', JSON.stringify(customLabels));
+
+        const siteValue = document.getElementById("siteSelect").value;
 
         await fetch("/stats/label", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
-            site_id: document.getElementById("siteSelect").value || undefined,
+            site_id: siteValue !== "" ? siteValue : undefined,
             element: span.dataset.element,
             original_text: span.dataset.originalText || span.dataset.element,
             custom_text: newText
@@ -195,7 +197,6 @@ function renderChart(summaryData) {
       });
     });
   });
-}
 
 // Update chart when dropdown changes
 document.getElementById("summaryRange").addEventListener("change", () => {
@@ -335,4 +336,5 @@ function renderReferrers(events) {
         li.textContent = `${ref}: ${count}`;
         refList.appendChild(li);
     });
+  }
 }
