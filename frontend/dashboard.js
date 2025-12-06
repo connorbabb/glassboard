@@ -109,6 +109,10 @@ function renderFilteredChart(range) {
 
 const customLabels = {};
 
+// Load from localStorage if available
+const saved = localStorage.getItem('customLabels');
+if (saved) Object.assign(customLabels, JSON.parse(saved));
+
 function renderChart(summaryData) {
   const ctx = document.getElementById("topChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
@@ -162,9 +166,11 @@ function renderChart(summaryData) {
       span.replaceWith(input);
       input.focus();
 
-      input.addEventListener("blur", async () => {
+    input.addEventListener("blur", async () => {
         const customText = input.value;
-        customLabels[item.element] = customText; // save locally
+        customLabels[item.element] = customText;  // save locally
+        localStorage.setItem('customLabels', JSON.stringify(customLabels)); // persist
+
         editingElements.delete(item.element); // unlock
         const spanNew = document.createElement("span");
         spanNew.className = "label";
@@ -178,13 +184,13 @@ function renderChart(summaryData) {
 
         // send to server
         await fetch("/stats/label", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({
-            site_id: document.getElementById("siteSelect").value || null,
-            element: spanNew.dataset.element,
-            original_text: spanNew.dataset.original,
-            custom_text: customText
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                site_id: document.getElementById("siteSelect").value || null,
+                element: spanNew.dataset.element,
+                original_text: spanNew.dataset.original,
+                custom_text: customText
           })
         });
       });
