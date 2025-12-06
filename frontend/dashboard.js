@@ -45,6 +45,10 @@ function updateDashboard() {
       // === Save summary for chart filtering ===
       allSummaryData = data.summary;
 
+      allSummaryData.forEach(item => {
+        if (item.custom_text) customLabels[item.element] = item.custom_text;
+      });
+
       // === Render chart based on current dropdown ===
       const range = document.getElementById("summaryRange").value;
       renderFilteredChart(range);
@@ -76,6 +80,9 @@ function updateDashboard() {
 function renderFilteredChart(range) {
   const now = new Date();
   const filtered = allSummaryData.filter(item => {
+    if (customLabels[item.element] && !editingElements.has(item.element)) {
+      item.text = customLabels[item.element];
+    }
     if (!item.last_click) return true;
     const ts = new Date(item.last_click);
     const diffDays = (now - ts) / (1000 * 60 * 60 * 24);
@@ -146,7 +153,10 @@ function renderChart(summaryData) {
     li.appendChild(span);
     topLabelsUl.appendChild(li);
 
+    const editingElements = new Set(); // track elements currently being edited
+
     span.addEventListener("click", () => {
+      editingElements.add(item.element); // lock this element
       const input = document.createElement("input");
       input.value = span.innerText;
       span.replaceWith(input);
@@ -155,6 +165,7 @@ function renderChart(summaryData) {
       input.addEventListener("blur", async () => {
         const customText = input.value;
         customLabels[item.element] = customText; // save locally
+        editingElements.delete(item.element); // unlock
         const spanNew = document.createElement("span");
         spanNew.className = "label";
         spanNew.dataset.element = item.element;
@@ -174,11 +185,11 @@ function renderChart(summaryData) {
             element: spanNew.dataset.element,
             original_text: spanNew.dataset.original,
             custom_text: customText
-      })
+          })
+        });
+      });
     });
   });
-});
-});
 }
 
 // Update chart when dropdown changes
