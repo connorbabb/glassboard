@@ -154,48 +154,43 @@ function renderChart(summaryData) {
   const topLabelsUl = document.getElementById("topLabels");
   topLabelsUl.innerHTML = "";
 
-  summaryData.forEach(item => {
+  summaryData.forEach((item, i) => {
     const li = document.createElement("li");
     const span = document.createElement("span");
     span.className = "label";
-    span.dataset.element = item.element;
-    span.dataset.original = item.element;
+    span.dataset.index = i;         // track index
     span.innerText = item.text;
     li.appendChild(span);
     topLabelsUl.appendChild(li);
 
     span.addEventListener("click", () => {
-      editingElements.add(item.element); // lock this element
       const input = document.createElement("input");
       input.value = span.innerText;
       span.replaceWith(input);
       input.focus();
 
-    input.addEventListener("blur", async () => {
-        const customText = input.value;
-        customLabels[item.element] = customText;  // save locally
-        localStorage.setItem('customLabels', JSON.stringify(customLabels)); // persist
+      input.addEventListener("blur", async () => {
+        const newText = input.value;
+        span.innerText = newText; // recreate span or reuse
+        input.replaceWith(span);
 
-        editingElements.delete(item.element); // unlock
-        const spanNew = document.createElement("span");
-        spanNew.className = "label";
-        spanNew.dataset.element = item.element;
-        spanNew.dataset.original = item.text || item.element;
-        spanNew.innerText = customText;
-        input.replaceWith(spanNew);
-
-        chartInstance.data.labels[summaryData.indexOf(item)] = customText;
+        // update chart directly using stored index
+        chartInstance.data.labels[span.dataset.index] = newText;
         chartInstance.update();
+
+        // optionally update customLabels for persistence
+        customLabels[item.element] = newText;
+        localStorage.setItem('customLabels', JSON.stringify(customLabels));
 
         // send to server
         await fetch("/stats/label", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                site_id: document.getElementById("siteSelect").value || null,
-                element: spanNew.dataset.element,
-                original_text: spanNew.dataset.original,
-                custom_text: customText
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            site_id: document.getElementById("siteSelect").value || null,
+            element: item.element,
+            original_text: item.text || item.element,
+            custom_text: newText
           })
         });
       });
