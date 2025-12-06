@@ -245,9 +245,6 @@ document.getElementById("resetButton").addEventListener("click", () => {
 });
 
 function renderReferrers(events) {
-    console.log("Referrer Events:", events);
-    console.log("Extracted referrers:", events.map(e => e.referrer));
-
     const refList = document.getElementById("referrerList");
     refList.innerHTML = "";
 
