@@ -360,33 +360,41 @@ document.addEventListener('DOMContentLoaded', () => {
 // ... (Your other utility functions like logout, loadWebsites, renderReferrers)
 
 /**
- * Renders the list of all recent events (clicks and page views).
+ * Renders the list of the 10 most recent events (clicks and page views).
  * @param {Array} clicks - Array of click events from data.all_clicks
  * @param {Array} visits - Array of page view events from data.all_visits
  */
 function renderAllEvents(clicks, visits) {
     const allList = document.getElementById("all");
-    if (!allList) return; // Exit if the UL element is not found
+    if (!allList) return; 
 
     allList.innerHTML = ""; // Clear existing list
 
     // Combine and sort events by timestamp descending
     const allEvents = [...clicks, ...visits]
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        .slice(0, 15); // Show only the 15 most recent events
+        .slice(0, 10); // *** FIXED: Limit to 10 most recent events ***
 
     allEvents.forEach(event => {
         const li = document.createElement("li");
+        
+        // Format time and date
         const time = new Date(event.timestamp).toLocaleTimeString();
         const date = new Date(event.timestamp).toLocaleDateString();
 
         let eventDetail = '';
+        
+        // *** FIXED: Ensure event properties are correctly used based on type ***
         if (event.event_type === 'click') {
-            eventDetail = `CLICKED: "${event.text}" on <${event.element}>`;
+            // Clicks have 'text' and 'element'
+            const textDisplay = event.text ? `"${event.text}"` : 'NO TEXT';
+            eventDetail = `CLICKED: ${textDisplay} on <${event.element}>`;
         } else if (event.event_type === 'page_view') {
-            eventDetail = `VIEWED: ${event.url}`;
+            // Page views have 'url'
+            eventDetail = `VIEWED: ${event.url || 'NO URL'}`;
         }
         
+        // Final list item output
         li.textContent = `[${date} ${time}] - ${eventDetail}`;
         allList.appendChild(li);
     });
