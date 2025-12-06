@@ -122,6 +122,8 @@ const customLabels = {};
 const saved = localStorage.getItem('customLabels');
 if (saved) Object.assign(customLabels, JSON.parse(saved));
 
+const editingElements = new Set(); // track elements currently being edited
+
 function renderChart(summaryData) {
   const ctx = document.getElementById("topChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
@@ -161,12 +163,10 @@ function renderChart(summaryData) {
     const span = document.createElement("span");
     span.className = "label";
     span.dataset.element = item.element;
-    span.dataset.original = item.text || item.element;
-    span.innerText = customLabels[item.element] || item.text || item.element;
+    span.dataset.original = item.element;
+    span.innerText = item.text;
     li.appendChild(span);
     topLabelsUl.appendChild(li);
-
-    const editingElements = new Set(); // track elements currently being edited
 
     span.addEventListener("click", () => {
       editingElements.add(item.element); // lock this element
