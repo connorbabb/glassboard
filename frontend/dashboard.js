@@ -158,8 +158,10 @@ function renderChart(summaryData) {
     const li = document.createElement("li");
     const span = document.createElement("span");
     span.className = "label";
-    span.dataset.index = i;         // track index
-    span.innerText = item.text;
+    span.dataset.index = i;
+    span.dataset.element = item.element;          // store element reference
+    span.dataset.originalText = item.text;        // store the original text
+    span.innerText = item.text;                   // initial text
     li.appendChild(span);
     topLabelsUl.appendChild(li);
 
@@ -171,25 +173,22 @@ function renderChart(summaryData) {
 
       input.addEventListener("blur", async () => {
         const newText = input.value;
-        span.innerText = newText; // recreate span or reuse
+        span.innerText = newText;  // only this span is updated
         input.replaceWith(span);
 
-        // update chart directly using stored index
         chartInstance.data.labels[span.dataset.index] = newText;
         chartInstance.update();
 
-        // optionally update customLabels for persistence
-        customLabels[item.element] = newText;
+        customLabels[span.dataset.element] = newText;  // update label map
         localStorage.setItem('customLabels', JSON.stringify(customLabels));
 
-        // send to server
         await fetch("/stats/label", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
             site_id: document.getElementById("siteSelect").value || null,
-            element: item.element,
-            original_text: item.text || item.element,
+            element: span.dataset.element,
+            original_text: span.dataset.originalText,
             custom_text: newText
           })
         });
@@ -337,33 +336,3 @@ function renderReferrers(events) {
         refList.appendChild(li);
     });
 }
-
-document.querySelectorAll(".label").forEach(span => {
-  span.addEventListener("click", () => {
-    const input = document.createElement("input");
-    input.value = span.innerText;
-    span.replaceWith(input);
-    input.focus();
-
-    input.addEventListener("blur", async () => {
-      const customText = input.value;
-      const spanNew = document.createElement("span");
-      spanNew.className = "label";
-      spanNew.dataset.element = input.dataset.element;
-      spanNew.dataset.original = input.dataset.original;
-      spanNew.innerText = customText;
-      input.replaceWith(spanNew);
-
-      await fetch("/stats/label", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          site_id: SITE_ID,
-          element: spanNew.dataset.element,
-          original_text: spanNew.dataset.original,
-          custom_text: customText
-        })
-      });
-    });
-  });
-});
