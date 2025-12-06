@@ -376,7 +376,6 @@ function renderAllEvents(clicks, visits) {
         .slice(0, 10); // Limit to 10 most recent events
 
     allEvents.forEach(event => {
-        console.log("Event Data:", event);
         const li = document.createElement("li");
         
         // Format time and date
@@ -385,22 +384,20 @@ function renderAllEvents(clicks, visits) {
 
         let eventDetail = '';
         
-        // --- CRITICAL NAMING CHECK ---
-        if (event.event_type === 'click') {
-            // Check for common naming conventions if event.text and event.element are null
-            const textValue = event.text || event.event_text; // Check 'text' or 'event_text'
-            const elementValue = event.element || event.html_element; // Check 'element' or 'html_element'
+        // --- FINAL, CORRECTED NAMING CHECK ---
+        
+        // Use the presence of the 'element' field to distinguish click from page_view
+        if (event.element) { 
+            // This is a CLICK event
+            const textDisplay = event.text ? `"${event.text}"` : 'NO TEXT';
+            eventDetail = `CLICKED: ${textDisplay} on <${event.element}>`;
             
-            const textDisplay = textValue ? `"${textValue}"` : 'NO TEXT';
-            const elementDisplay = elementValue ? `<${elementValue}>` : '<NO ELEMENT>';
-            
-            eventDetail = `CLICKED: ${textDisplay} on ${elementDisplay}`;
-            
-        } else if (event.event_type === 'page_view') {
-            // Check for common naming conventions if event.url is null
-            const urlValue = event.url || event.page_url || event.domain_url; // Check 'url' or common variants
-            eventDetail = `VIEWED: ${urlValue || 'NO URL'}`;
+        } else if (event.page) {
+            // This is a PAGE VIEW event (or lacks click details, but has a page)
+            eventDetail = `VIEWED: ${event.page}`; // Use event.page for the URL
         }
+        
+        // If the backend didn't set event_type, this logic handles it based on data present.
         
         // Final list item output
         li.textContent = `[${date} ${time}] - ${eventDetail}`;
