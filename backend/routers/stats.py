@@ -45,8 +45,8 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     # =========================================================================
 
     # Clicks: Filtered by interactive elements (buttons and links)
-    click_base_query = base_query_unfiltered.filter(func.lower(Event.event_type) == 'click')    # All click events for the "all_clicks" list
-
+    click_base_query = base_query_filtered.filter(func.lower(Event.event_type) == 'click')
+    
     all_events = (
         click_base_query
         .with_entities(Event.element, Event.text, Event.page, Event.referrer, Event.timestamp)
@@ -114,7 +114,7 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     # =========================================================================
 
     # Visits: Filtered by event_type == 'page_view'
-    visit_base_query = base_query_unfiltered.filter(func.lower(Event.event_type) == 'page_view')
+    visit_base_query = base_query_filtered.filter(func.lower(Event.event_type) == 'page_view')
     total_visits = visit_base_query.count() # Total all-time page views
 
     # Function to count Page Visits since a given time period
