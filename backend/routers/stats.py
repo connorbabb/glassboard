@@ -24,7 +24,7 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     ).all()
     
     # Convert ignored patterns to a list of tuples for exclusion filtering
-    ignored_tuples = [(i.element, i.original_text) for i in ignored_patterns_query]
+    ignored_tuples = [(i.element.lower(), i.original_text.lower()) for i in ignored_patterns_query]
 
     # --- REUSABLE BASE QUERY (Filtered ONLY by site_id) ---
     base_query_unfiltered = db.query(Event)
@@ -36,7 +36,7 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     if ignored_tuples:
         # Create a list of tuples of (element, text) to exclude
         exclusion_filter = (
-            tuple_(Event.element, Event.text).notin_(ignored_tuples)
+            tuple_(func.lower(Event.element), func.lower(Event.text)).notin_(ignored_tuples)
         )
         base_query_filtered = base_query_filtered.filter(exclusion_filter)
 
