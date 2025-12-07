@@ -31,8 +31,8 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     if site_id:
         base_query_unfiltered = base_query_unfiltered.filter(Event.site_id == site_id)
 
-    # 🌟 CRITICAL NEW FILTER: Exclude ignored patterns
-    # We use SQLAlchemy's Tuple to match the (element, text) pair
+    base_query_filtered = base_query_unfiltered
+
     if ignored_tuples:
         # Create a list of tuples of (element, text) to exclude
         exclusion_filter = (
