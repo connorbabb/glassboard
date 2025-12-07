@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from sqlalchemy.sql.functions import tuple_
+from sqlalchemy.sql import tuple_
 from ..database import get_db
 from ..models import Event, EventLabel, IgnoredEvent
 import csv
