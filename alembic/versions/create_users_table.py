@@ -3,8 +3,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = "xxxx_users_table"
-down_revision = None  # or whatever your previous migration is
+revision = "a7afee95e6b5"
+down_revision = "xxxx_users_table"
 branch_labels = None
 depends_on = None
 
