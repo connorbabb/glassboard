@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.sql.functions import tuple_
 from ..database import get_db
 from ..models import Event, EventLabel, IgnoredEvent
 import csv
@@ -35,7 +36,7 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     if ignored_tuples:
         # Create a list of tuples of (element, text) to exclude
         exclusion_filter = (
-            (Event.element, Event.text).notin_(ignored_tuples)
+            tuple_(Event.element, Event.text).notin_(ignored_tuples)
         )
         base_query_filtered = base_query_filtered.filter(exclusion_filter)
 
