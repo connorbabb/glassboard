@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..database import get_db
-from ..models import Event, EventLabel
+from ..models import Event, EventLabel, IgnoredEvent
 import csv
 import io
 from weasyprint import HTML
@@ -16,10 +16,28 @@ router = APIRouter(prefix="/stats", tags=["Stats"])
 def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     now = datetime.utcnow()
 
+    # 🌟 NEW: Get all ignored events for the current site (or global ignores)
+    ignored_patterns_query = db.query(IgnoredEvent).filter(
+        # Mute patterns that match the specific site OR patterns that apply globally (site_id=None)
+        (IgnoredEvent.site_id == site_id) | (IgnoredEvent.site_id.is_(None)) 
+    ).all()
+    
+    # Convert ignored patterns to a list of tuples for exclusion filtering
+    ignored_tuples = [(i.element, i.original_text) for i in ignored_patterns_query]
+
     # --- REUSABLE BASE QUERY (Filtered ONLY by site_id) ---
     base_query_unfiltered = db.query(Event)
     if site_id:
         base_query_unfiltered = base_query_unfiltered.filter(Event.site_id == site_id)
+
+    # 🌟 CRITICAL NEW FILTER: Exclude ignored patterns
+    # We use SQLAlchemy's Tuple to match the (element, text) pair
+    if ignored_tuples:
+        # Create a list of tuples of (element, text) to exclude
+        exclusion_filter = (
+            (Event.element, Event.text).notin_(ignored_tuples)
+        )
+        base_query_filtered = base_query_filtered.filter(exclusion_filter)
 
     # =========================================================================
     # --- 1. CLICK AGGREGATION ---
@@ -295,3 +313,37 @@ def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
 
     db.commit()
     return {"status": "ok", "custom_text": payload.custom_text}
+
+
+# Insert this route in your stats router or a new admin router
+
+class EventMute(BaseModel):
+    site_id: Optional[str] # The site this mute applies to (can be null for global)
+    element: str
+    original_text: str
+
+@router.post("/mute_event")
+def mute_event(payload: EventMute, db: Session = Depends(get_db)):
+    # Check if the event pattern is already muted
+    ignored = db.query(IgnoredEvent).filter_by(
+        site_id=payload.site_id,
+        element=payload.element,
+        original_text=payload.original_text
+    ).first()
+
+    if ignored:
+        # If found, UNMUTE (delete the record)
+        db.delete(ignored)
+        action = "unmuted"
+    else:
+        # If not found, MUTE (add the record)
+        new_ignored = IgnoredEvent(
+            site_id=payload.site_id,
+            element=payload.element,
+            original_text=payload.original_text
+        )
+        db.add(new_ignored)
+        action = "muted"
+    
+    db.commit()
+    return {"status": "ok", "action": action}

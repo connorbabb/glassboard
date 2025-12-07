@@ -139,6 +139,7 @@ function renderChart(summaryData) {
     summaryData.forEach((item, i) => {
         const li = document.createElement("li");
         const span = document.createElement("span");
+        const muteBtn = document.createElement("button"); // 🌟 NEW BUTTON
 
         span.className = "label";
         span.dataset.key = `${item.element}::${item.original_text}`;
@@ -146,7 +147,12 @@ function renderChart(summaryData) {
         span.dataset.originalText = item.original_text;
         span.innerText = item.text;
 
+        muteBtn.innerText = "Mute"; // Initial state (we can improve this later)
+        muteBtn.className = "mute-btn";
+        muteBtn.onclick = () => muteEvent(item.element, item.original_text); // 🌟 NEW CLICK HANDLER
+
         li.appendChild(span);
+        li.appendChild(muteBtn); // 🌟 APPEND BUTTON
         topLabelsUl.appendChild(li);
 
         span.onclick = () => {
@@ -403,4 +409,41 @@ function renderAllEvents(clicks, visits) {
         li.textContent = `[${date} ${time}] - ${eventDetail}`;
         allList.appendChild(li);
     });
+}
+
+async function muteEvent(element, originalText) {
+    // Get the current site ID (null means global mute)
+    const siteId = document.getElementById("siteSelect").value || null; 
+    
+    const payload = {
+        site_id: siteId,
+        element: element,
+        original_text: originalText
+    };
+
+    const actionText = `element "${element}" with text "${originalText}"`;
+    
+    if (!confirm(`Are you sure you want to toggle tracking for ${actionText}? This will update the stats immediately.`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch("/stats/mute_event", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            alert(`Event pattern successfully ${data.action} for site ${siteId || 'globally'}.`);
+            // Refresh dashboard to show excluded stats
+            updateDashboard(); 
+        } else {
+            alert("Failed to mute/unmute event.");
+        }
+    } catch (err) {
+        console.error("Error toggling mute status:", err);
+    }
 }

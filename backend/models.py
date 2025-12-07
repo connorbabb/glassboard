@@ -50,3 +50,16 @@ class EventLabel(Base):
     __table_args__ = (
         UniqueConstraint("site_id", "element", "original_text", name="uix_event_label"),
     )
+
+class IgnoredEvent(Base):
+    __tablename__ = "ignored_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    site_id = Column(String, nullable=True) # If you want to mute globally (site_id=None) or per site
+    element = Column(String, nullable=False)
+    original_text = Column(String, nullable=False)
+    
+    # Ensures no duplicate mute rules exist for the same element/text pair on the same site
+    __table_args__ = (
+        UniqueConstraint("site_id", "element", "original_text", name="uix_ignored_event"),
+    )
