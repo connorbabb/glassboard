@@ -119,8 +119,13 @@ def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
 
     # Function to count Page Visits since a given time period
     def count_visits_since(days: int = 0, weeks: int = 0):
+        # This function correctly uses the pre-filtered visit_base_query
         q = visit_base_query.with_entities(func.count(Event.id))
-        q = q.filter(Event.timestamp >= now - timedelta(days=days, weeks=weeks))
+        
+        # Only filter by time period if a time limit is provided
+        if days > 0 or weeks > 0:
+            q = q.filter(Event.timestamp >= now - timedelta(days=days, weeks=weeks))
+            
         return q.scalar() or 0
     
     total_visits = visit_base_query.count() # Total all-time page views
