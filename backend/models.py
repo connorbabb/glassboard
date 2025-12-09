@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .database import Base
 from datetime import datetime
+from uuid import uuid4
 
 class Event(Base):
     __tablename__ = "events"
@@ -29,8 +30,13 @@ class User(Base):
 class Website(Base):
     __tablename__ = "websites"
 
-    id = Column(Integer, primary_key=True, index=True)
-    site_id = Column(String, unique=True, index=True)  # used in snippet
+    id = Column(
+        UUID(as_uuid=True), 
+        primary_key=True, 
+        default=uuid4,           # Automatically generate a UUID upon creation
+        unique=True, 
+        nullable=False
+    )
     name = Column(String, nullable=True)               # optional label/business name
     domain = Column(String, nullable=True)             # optional actual domain
     user_id = Column(Integer, ForeignKey("users.id"))  # owner
