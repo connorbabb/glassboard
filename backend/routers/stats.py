@@ -10,17 +10,38 @@ import io
 from weasyprint import HTML
 from pydantic import BaseModel
 from typing import Optional
+from uuid import UUID as py_UUID # Import the standard Python UUID type
 
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
 @router.get("")
 def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
     now = datetime.utcnow()
+    
+    # 🚨 FIX: Convert the 32-char hex string (if present) to a proper hyphenated UUID string
+    # We use the Python UUID type's formatting capability
+    formatted_site_id = None
+    if site_id:
+        try:
+            # Recreate the UUID object from the string, which forces the hyphenated format
+            formatted_site_id = str(py_UUID(site_id)) 
+        except ValueError:
+            # Handle case where site_id might be invalid/incomplete. You might raise an error here.
+            raise HTTPException(status_code=400, detail="Invalid site_id format provided.")
 
-    # 🌟 NEW: Get all ignored events for the current site (or global ignores)
+
+    # --- REUSABLE BASE QUERY (Filtered ONLY by site_id) ---
+    base_query_unfiltered = db.query(Event)
+    
+    # NOTE: Change site_id to formatted_site_id in the filter!
+    if formatted_site_id: 
+        # Check if the column type is UUID, it will handle the comparison correctly with the string
+        base_query_unfiltered = base_query_unfiltered.filter(Event.site_id == formatted_site_id)
+        
+    # ... (Continue using formatted_site_id in the IgnoredEvent query as well)
     ignored_patterns_query = db.query(IgnoredEvent).filter(
-        # Mute patterns that match the specific site OR patterns that apply globally (site_id=None)
-        (IgnoredEvent.site_id == site_id) | (IgnoredEvent.site_id.is_(None)) 
+        # NOTE: Change site_id to formatted_site_id!
+        (IgnoredEvent.site_id == formatted_site_id) | (IgnoredEvent.site_id.is_(None)) 
     ).all()
     
     # Convert ignored patterns to a list of tuples for exclusion filtering
