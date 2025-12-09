@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
 from .database import Base
 from datetime import datetime
 
@@ -7,7 +8,7 @@ class Event(Base):
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)
-    site_id = Column(String, index=True)
+    site_id = Column(UUID(as_uuid=True), ForeignKey("websites.id", ondelete="CASCADE"), index=True)    
     page = Column(String)
     element = Column(String)
     text = Column(String)                # 👈 new field for button/link text
@@ -15,6 +16,7 @@ class Event(Base):
     event_type = Column(String)
     timestamp = Column(DateTime(timezone=True), default=datetime.utcnow)
     referrer = Column(String, nullable=True)
+    website = relationship("Website", back_populates="events")
 
 class User(Base):
     __tablename__ = "users"
@@ -38,11 +40,31 @@ class Website(Base):
     # ORM relationship (not required, just nice to have)
     owner = relationship("User", back_populates="websites")
 
+    events = relationship(
+        "Event", 
+        back_populates="website", 
+        cascade="all, delete-orphan",  # Deletes objects in Python session
+        passive_deletes=True          # Allows DB to handle cascades for performance
+    )
+    labels = relationship(
+        "EventLabel", 
+        back_populates="website", 
+        cascade="all, delete-orphan",  # Deletes objects in Python session
+        passive_deletes=True          # Allows DB to handle cascades for performance
+    )
+    ignored_events = relationship(
+        "IgnoredEvent", 
+        back_populates="website", 
+        cascade="all, delete-orphan",  # Deletes objects in Python session
+        passive_deletes=True          # Allows DB to handle cascades for performance
+    )
+
 class EventLabel(Base):
     __tablename__ = "event_labels"
 
     id = Column(Integer, primary_key=True, index=True)
-    site_id = Column(String, nullable=False)
+    site_id = Column(UUID(as_uuid=True), ForeignKey("websites.id", ondelete="CASCADE"), index=True, nullable=True)
+    website = relationship("Website", back_populates="labels")
     element = Column(String, nullable=False)
     original_text = Column(String, nullable=False)
     custom_text = Column(String, nullable=True)
@@ -55,7 +77,8 @@ class IgnoredEvent(Base):
     __tablename__ = "ignored_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    site_id = Column(String, nullable=True) # If you want to mute globally (site_id=None) or per site
+    site_id = Column(UUID(as_uuid=True), ForeignKey("websites.id", ondelete="CASCADE"), index=True, nullable=True)
+    website = relationship("Website", back_populates="ignored_events") 
     element = Column(String, nullable=False)
     original_text = Column(String, nullable=False)
     
