@@ -1,6 +1,6 @@
 # backend/routers/website.py
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Query
 from sqlalchemy.orm import Session  
 from sqlalchemy import func
 # import secrets # <-- NO LONGER NEEDED
@@ -42,30 +42,33 @@ def list_websites(db: Session = Depends(get_db), user = Depends(get_current_user
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_website(
-    identifier: str, # The domain or name provided by the user
-    db: Session = Depends(get_db)
+    # 🚨 FIX: Explicitly tell FastAPI this parameter comes from the URL query string
+    identifier: str = Query(..., description="The domain or name of the website to delete"), 
+    db: Session = Depends(get_db),
+    # You should also add user authorization here!
+    user = Depends(get_current_user) # <-- Added security check
 ):
-    # (The logic here is fine, but you might want to require the user dependency)
-    # The logic successfully finds the Website object by domain/name and deletes it.
-    
     """
     Deletes a website and all associated events, labels, and ignored patterns.
-    The website is identified by its domain or its friendly name (case-insensitive).
     """
     
-    # 1. Find the website by domain or name (case-insensitive search)
+    # 1. Find the website by domain or name, and ensure it belongs to the current user
     website = db.query(Website).filter(
-        (func.lower(Website.domain) == func.lower(identifier)) |
-        (func.lower(Website.name) == func.lower(identifier))
+        (Website.owner == user) & # <-- Added security check to prevent deleting other user's sites
+        (
+            (func.lower(Website.domain) == func.lower(identifier)) |
+            (func.lower(Website.name) == func.lower(identifier))
+        )
     ).first()
     
     if not website:
+        # Note: We return 404 regardless of if the site exists or if it belongs to the user
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Website with identifier '{identifier}' not found."
+            detail=f"Website with identifier '{identifier}' not found or you do not own it."
         )
 
-    # 2. Delete the website object (Cascades handle related tables)
+    # 2. Delete the website object
     db.delete(website)
     db.commit()
 
