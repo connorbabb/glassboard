@@ -362,6 +362,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// --- NEW DELETION EVENT LISTENER (Add this to dashboard.js) ---
+document.getElementById("deleteWebsiteButton").addEventListener("click", () => {
+    const identifierInput = document.getElementById("websiteIdentifierInput");
+    const identifier = identifierInput.value.trim();
+
+    if (identifier) {
+        // This calls the deleteWebsite function, which constructs the correct URL
+        deleteWebsite(identifier); 
+        identifierInput.value = ''; // Clear input after triggering deletion
+    } else {
+        // Optionally provide user feedback
+        alert("Please enter a Website Name or Domain to delete.");
+    }
+});
+// ------------------------------------
+
 // --- 3. UTILITY FUNCTIONS --- 
 // ... (Your other utility functions like logout, loadWebsites, renderReferrers)
 
