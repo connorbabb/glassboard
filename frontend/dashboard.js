@@ -447,3 +447,36 @@ async function muteEvent(element, originalText) {
         console.error("Error toggling mute status:", err);
     }
 }
+
+// Add this new function to your dashboard.js file
+async function deleteWebsite(identifier) {
+    if (!confirm(`Are you sure you want to delete the website "${identifier}"? This action is irreversible.`)) {
+        return; // User cancelled
+    }
+    
+    // Construct the URL using the identifier as a Query Parameter
+    // This is the CRITICAL FIX that makes the frontend talk to your fixed backend function!
+    const url = `/websites/?identifier=${encodeURIComponent(identifier)}`;
+
+    try {
+        const res = await fetch(url, { 
+            method: 'DELETE',
+            credentials: 'include' // Required for sending the authentication cookie
+        });
+
+        if (res.status === 204) {
+            alert(`Website "${identifier}" successfully deleted.`);
+            // After successful deletion, reload the website list
+            await loadWebsites(); 
+            // Also refresh your dashboard data
+            updateDashboard();
+        } else {
+            // Read the error detail from the server response (e.g., "not found or you do not own it.")
+            const data = await res.json();
+            alert(data.detail || `Failed to delete website "${identifier}".`);
+        }
+    } catch (err) {
+        console.error('Error deleting website:', err);
+        alert('Connection error occurred.');
+    }
+}
