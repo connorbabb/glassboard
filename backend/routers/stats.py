@@ -74,14 +74,12 @@ def get_stats(
     
     # Build a list of Website IDs owned by the current user.
     user_website_ids = db.query(Website.id).filter(Website.user_id == user.id).all()
-    user_website_ids = [str(id[0]) for id in user_website_ids] # Convert to list of UUID strings
+    user_website_ids = [id[0] for id in user_website_ids]
 
     # 🎯 CRITICAL FIX: The IgnoredEvent must be either global (NULL) 
     # OR its site_id must be in the list of sites owned by the user.
     ignored_patterns_query = db.query(IgnoredEvent).filter(
-        # Only include global mutes
         (IgnoredEvent.site_id.is_(None)) | 
-        # OR mutes that belong to one of the user's sites
         (IgnoredEvent.site_id.in_(user_website_ids))
     )
     
