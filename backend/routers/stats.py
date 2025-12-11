@@ -143,31 +143,49 @@ def get_stats(
     )
     grouped = grouped_query.all()
 
+# In backend/routers/stats.py (inside the loop for 'grouped' stats)
+
     summary = []
     for g in grouped:
-        # 🛠️ FIX: Correctly handle retrieval of NULL site_id
-        label_query = db.query(EventLabel).filter(
-            EventLabel.element == g[0],
-            EventLabel.original_text == g[1]
+        
+        # 1. Start by querying EventLabel and joining it to Website
+        label_query = db.query(EventLabel).join(Website, isouter=True) 
+        
+        # 2. Filter by the element and text
+        label_query = label_query.filter(
+            EventLabel.element == g.element,
+            EventLabel.original_text == g.text
         )
         
-        if site_id is None:
-            label_query = label_query.filter(EventLabel.site_id.is_(None))
-        else:
-            label_query = label_query.filter(EventLabel.site_id == site_id)
+        # 3. CRITICAL SECURITY FILTER: Ensure the label is either global OR belongs to the user
+        label_query = label_query.filter(
+            (EventLabel.site_id.is_(None)) | 
+            # ✅ FIX: Use Website.user_id to restrict labels to the current user's sites
+            (Website.user_id == user.id)
+        )
         
+        # 4. Apply site-specific filtering if a site is selected
+        if site_id:
+            # If a specific site is selected, only look for labels for that site (or global)
+            label_query = label_query.filter(
+                EventLabel.site_id == formatted_site_id
+            )
+        else:
+            # If "All Sites" is selected, only look for global labels (site_id is NULL)
+            # OR labels tied to any of the user's sites (already covered by the join/filter in step 3).
+            pass
+
         label = label_query.first()
         
-        custom_text = label.custom_text if label else g[1]
+        custom_text = label.custom_text if label else g.text
 
         summary.append({
-            "element": g[0],
-            "text": custom_text,        # send custom name if exists
-            "original_text": g[1],     # always include original for reference
-            "count": g[2],
-            "last_click": g[3].isoformat() if g[3] else None
+            "element": g.element,
+            "text": custom_text, 
+            "original_text": g.text, 
+            "count": g.count,
+            "last_click": g.last_click.isoformat() if g.last_click else None
         })
-
 
 
 
