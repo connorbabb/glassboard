@@ -52,7 +52,7 @@ def get_stats(
             Website.id == formatted_site_id
         ).first()
 
-        if not website or website.owner_id != user.id: # Note: Use .owner_id here too
+        if not website or website.user_id != user.id: # Note: Use .owner_id here too
             # This handles unauthorized access to a specific site.
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, 
@@ -75,7 +75,7 @@ def get_stats(
     # You must also fix the IgnoredEvent query to use owner_id
     ignored_patterns_query = db.query(IgnoredEvent).join(Website, isouter=True).filter(
         (IgnoredEvent.site_id.is_(None)) |      # Global ignored events
-        (Website.owner_id == user.id)           # Ignored events for the user's sites
+        (Website.user_id == user.id)           # Ignored events for the user's sites
     )
     # ... (rest of ignored_patterns_query block is fine)
     
