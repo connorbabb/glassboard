@@ -12,7 +12,10 @@ RDS_PORT = 5432
 DATABASE_URL = f"postgresql+psycopg2://{RDS_USER}:{RDS_PASSWORD}@{RDS_HOST}:{RDS_PORT}/glassboard"
 
 # --- Create engine ---
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL, 
+    echo=True
+)
 
 # --- ORM session setup ---
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

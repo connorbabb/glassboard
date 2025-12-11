@@ -76,25 +76,33 @@ def get_stats(
     user_website_ids = db.query(Website.id).filter(Website.user_id == user.id).all()
     user_website_ids = [id[0] for id in user_website_ids] # CORRECT: list of uuid.UUID objects
 
+    # --- CRITICAL FIX: Use UNION to securely build the set of Mutes ---
+
+    # Start with a query for all TRULY global mutes (site_id is null)
+    # NOTE: These are global across all users, which is currently necessary 
+    # as the IgnoredEvent table lacks a user_id column.
+    ignored_patterns_query = db.query(IgnoredEvent).filter(IgnoredEvent.site_id.is_(None))
+    
     if formatted_site_id:
-        # Case: Specific Authorized Site Selected
-        # We only want mutes that are Global OR are for this specific site.
-        ignored_patterns_query = db.query(IgnoredEvent).filter(
-            (IgnoredEvent.site_id.is_(None)) | 
-            (IgnoredEvent.site_id == formatted_site_id)
+        # Case 1: Specific Authorized Site Selected.
+        # UNION the global mutes with mutes specific to this single site.
+        ignored_patterns_query = ignored_patterns_query.union(
+            db.query(IgnoredEvent).filter(IgnoredEvent.site_id == formatted_site_id)
         )
     else:
-        # Case: All Sites Selected
-        # We want mutes that are Global OR are for ANY of the user's sites.
-        ignored_patterns_query = db.query(IgnoredEvent).filter(
-            (IgnoredEvent.site_id.is_(None)) | 
-            (IgnoredEvent.site_id.in_(user_website_ids))
-        )
+        # Case 2: All Sites Selected (for the current user).
+        # UNION the global mutes with mutes specific to ANY of the user's sites.
+        if user_website_ids:
+            ignored_patterns_query = ignored_patterns_query.union(
+                db.query(IgnoredEvent).filter(IgnoredEvent.site_id.in_(user_website_ids))
+            )
 
     ignored_patterns_query = ignored_patterns_query.all()
     
     # Convert ignored patterns to a list of tuples for exclusion filtering
     ignored_tuples = [(i.element.lower(), i.original_text.lower()) for i in ignored_patterns_query]
+
+    # ... (Rest of the function continues below this point)
 
     # **CRITICAL: Remove the entire block that starts with `base_query_unfiltered = db.query(Event)`**
     # The variable is already correctly filtered from Step 1!
