@@ -194,3 +194,11 @@ li {
     margin-top: 10px; /* Space from input fields */
     width: 100%; /* Make it full width in the form context */
 }
+
+/* 3. Style the snippet output area */
+#snippetText {
+    font-family: monospace;
+    background-color: var(--muted-bg);
+    border: 1px dashed var(--text-color); /* Use a dashed border to look like a copy area */
+    padding: 10px;
+}
