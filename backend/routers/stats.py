@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, Query, Response, HTTPException
+from fastapi import APIRouter, Depends, Query, Response, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from sqlalchemy.sql import tuple_
 from ..database import get_db
-from ..models import Event, EventLabel, IgnoredEvent
+from ..models import Event, EventLabel, IgnoredEvent, Website
+from ..auth import get_current_user
 import csv
 import io
 from weasyprint import HTML
@@ -15,19 +16,34 @@ from uuid import UUID as py_UUID # Import the standard Python UUID type
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
 @router.get("")
-def get_stats(site_id: str = Query(None), db: Session = Depends(get_db)):
+def get_stats(
+    site_id: str = Query(None), 
+    db: Session = Depends(get_db),
+    # 🚨 ADD DEPENDENCY HERE
+    user = Depends(get_current_user) 
+):
     now = datetime.utcnow()
     
-    # 🚨 FIX: Convert the 32-char hex string (if present) to a proper hyphenated UUID string
-    # We use the Python UUID type's formatting capability
     formatted_site_id = None
     if site_id:
         try:
-            # Recreate the UUID object from the string, which forces the hyphenated format
             formatted_site_id = str(py_UUID(site_id)) 
         except ValueError:
-            # Handle case where site_id might be invalid/incomplete. You might raise an error here.
             raise HTTPException(status_code=400, detail="Invalid site_id format provided.")
+
+        # =====================================================================
+        # 🚨 IDOR FIX: CHECK WEBSITE OWNERSHIP (This logic uses the 'user' object)
+        # =====================================================================
+        website = db.query(Website).filter(
+            Website.id == formatted_site_id
+        ).first()
+
+        if not website or website.owner != user:
+            # IMPORTANT: Use 404 to avoid leaking site existence to unauthorized users
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Website not found or access denied."
+            )
 
 
     # --- REUSABLE BASE QUERY (Filtered ONLY by site_id) ---
