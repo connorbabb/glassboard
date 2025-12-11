@@ -364,12 +364,38 @@ class LabelUpdate(BaseModel):
     custom_text: str
 
 @router.post("/label")
-def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
+def update_label(
+    payload: LabelUpdate, 
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user) # <-- CRITICAL: Dependency added
+):
+    
+    # --- IDOR CHECK & SITE_ID VALIDATION ---
+    formatted_site_id = None
+    if payload.site_id:
+        try:
+            # 1. Validate the incoming site_id format and convert to UUID object
+            formatted_site_id = py_UUID(payload.site_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid site_id format provided.")
+            
+        # 2. CRITICAL SECURITY CHECK: Ensure the site exists AND belongs to the user
+        website = db.query(Website).filter(
+            Website.id == formatted_site_id,
+            Website.user_id == user.id 
+        ).first()
+        
+        if not website:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Website not found or access denied."
+            )
+    # --- END IDOR CHECK ---
+
     # 1️⃣ Check for duplicate custom_text for this site
-    # Do NOT reject duplicate names across elements.
-    # Only block duplicates on the EXACT same element+text pair.
+    # Note: Using formatted_site_id instead of payload.site_id
     existing_exact = db.query(EventLabel).filter_by(
-        site_id=payload.site_id,
+        site_id=formatted_site_id, # <-- Using the validated UUID object
         element=payload.element,
         original_text=payload.original_text
     ).first()
@@ -382,7 +408,7 @@ def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
     label = (
         db.query(EventLabel)
         .filter_by(
-            site_id=payload.site_id,
+            site_id=formatted_site_id, # <-- Using the validated UUID object
             element=payload.element,
             original_text=payload.original_text
         )
@@ -393,7 +419,7 @@ def update_label(payload: LabelUpdate, db: Session = Depends(get_db)):
         label.custom_text = payload.custom_text
     else:
         label = EventLabel(
-            site_id=payload.site_id,
+            site_id=formatted_site_id, # <-- Using the validated UUID object
             element=payload.element,
             original_text=payload.original_text,
             custom_text=payload.custom_text
@@ -412,10 +438,37 @@ class EventMute(BaseModel):
     original_text: str
 
 @router.post("/mute_event")
-def mute_event(payload: EventMute, db: Session = Depends(get_db)):
+def mute_event(
+    payload: EventMute, 
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user) # ✅ ADDED: Get current user
+):
+    
+    # --- IDOR CHECK ---
+    formatted_site_id = None
+    if payload.site_id:
+        try:
+            formatted_site_id = py_UUID(payload.site_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid site_id format provided.")
+            
+        # Check if the site exists AND belongs to the user
+        website = db.query(Website).filter(
+            Website.id == formatted_site_id,
+            Website.user_id == user.id # ✅ CRITICAL IDOR CHECK
+        ).first()
+        
+        if not website:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Website not found or access denied."
+            )
+    # --- END IDOR CHECK ---
+    
     # Check if the event pattern is already muted
+    # Use the validated/formatted UUID here
     ignored = db.query(IgnoredEvent).filter_by(
-        site_id=payload.site_id,
+        site_id=formatted_site_id, # Use validated/formatted ID
         element=payload.element,
         original_text=payload.original_text
     ).first()
@@ -427,7 +480,7 @@ def mute_event(payload: EventMute, db: Session = Depends(get_db)):
     else:
         # If not found, MUTE (add the record)
         new_ignored = IgnoredEvent(
-            site_id=payload.site_id,
+            site_id=formatted_site_id, # Use validated/formatted ID
             element=payload.element,
             original_text=payload.original_text
         )

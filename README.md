@@ -144,8 +144,6 @@ cd ~/glassboard
 ```
 4. Run the file db_test.py in the root directory to ensure connection:
 ```
-pip install bcrypt==3.2.0
-
 python db_test.py
 ```
 5. Run the app either in the foreground or background with nohup:
@@ -172,14 +170,27 @@ To check the log
 tail -f nohup.out
 ```
 
--- Use Alembic – an actual migration tool used with SQLAlchemy:
+Use Alembic – an actual migration tool used with SQLAlchemy:
+```
 pip install alembic
+
 alembic init alembic
+```
 
--- Then every time you change your model:
+Then every time you change your model:
+```
 alembic revision --autogenerate -m "Add Website table"
+
 alembic upgrade head
+```
 
 
--- To access PostgreSQL and look at tables and data:
+To access PostgreSQL and look at tables and data:
+```
 psql -h glassboard-rds.c1ymcqk8mlq7.us-west-2.rds.amazonaws.com -U adminuser -d glassboard -W
+```
+
+If you have problems with logging in or registering your user, update or install bcrypt, which is the password hashing module used:
+```
+pip install bcrypt==3.2.0
+```
