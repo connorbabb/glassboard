@@ -129,7 +129,6 @@ Open frontend/index.html in a browser. Use the dropdown to select a site (demo12
 - Eventually I'll need to replace allow_origins=["*"] with allow_origins=["https://myglassboard.com"] or something similar. The asterisk allows all sites which is a security hole and bad for production.
 
 
-
 ## ssh Instructions
 
 1. Ensure the EC2 Instance is started on AWS.

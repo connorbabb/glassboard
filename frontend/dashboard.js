@@ -457,7 +457,7 @@ async function muteEvent(element, originalText) {
             // Refresh dashboard to show excluded stats
             updateDashboard(); 
         } else {
-            alert("Failed to mute/unmute event.");
+            alert("Failed to mute/unmute event. Check to make sure you have a specific site selected.");
         }
     } catch (err) {
         console.error("Error toggling mute status:", err);

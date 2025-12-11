@@ -14,7 +14,7 @@ DATABASE_URL = f"postgresql+psycopg2://{RDS_USER}:{RDS_PASSWORD}@{RDS_HOST}:{RDS
 # --- Create engine ---
 engine = create_engine(
     DATABASE_URL, 
-    echo=True
+    echo=False
 )
 
 # --- ORM session setup ---
