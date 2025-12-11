@@ -43,7 +43,7 @@ def get_stats(
     
     if site_id:
         try:
-            formatted_site_id = str(py_UUID(site_id))
+            formatted_site_id = py_UUID(site_id)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid site_id format provided.")
 
@@ -74,7 +74,7 @@ def get_stats(
     
     # Build a list of Website IDs owned by the current user.
     user_website_ids = db.query(Website.id).filter(Website.user_id == user.id).all()
-    user_website_ids = [id[0] for id in user_website_ids]
+    user_website_ids = [id[0] for id in user_website_ids] # CORRECT: list of uuid.UUID objects
 
     if formatted_site_id:
         # Case: Specific Authorized Site Selected
