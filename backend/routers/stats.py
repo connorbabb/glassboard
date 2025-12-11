@@ -57,7 +57,7 @@ def get_stats(
         # If site_id is valid AND belongs to the user, we filter the events by it
         # In backend/routers/stats.py (inside get_stats)
         base_query_unfiltered = db.query(Event).join(Website).filter(
-            Website.owner == user
+            Website.owner == user.id
         )
     
     # NOTE: If site_id is None (All Sites), the base_query_unfiltered already restricts 
