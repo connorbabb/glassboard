@@ -36,7 +36,7 @@ def get_stats(
     # Use Website.owner_id == user.id for maximum robustness.
     # If the user has no sites, this returns an empty set of Events.
     base_query_unfiltered = db.query(Event).join(Website).filter(
-        Website.owner_id == user.id
+        Website.user_id == user.id
     )
 
     formatted_site_id = None
