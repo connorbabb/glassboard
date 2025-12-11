@@ -76,18 +76,19 @@ def get_stats(
     user_website_ids = db.query(Website.id).filter(Website.user_id == user.id).all()
     user_website_ids = [id[0] for id in user_website_ids]
 
-    # 🎯 CRITICAL FIX: The IgnoredEvent must be either global (NULL) 
-    # OR its site_id must be in the list of sites owned by the user.
-    ignored_patterns_query = db.query(IgnoredEvent).filter(
-        (IgnoredEvent.site_id.is_(None)) | 
-        (IgnoredEvent.site_id.in_(user_website_ids))
-    )
-    
     if formatted_site_id:
-        # If a specific site is selected, we only want global OR that single site's mutes
-        ignored_patterns_query = ignored_patterns_query.filter(
+        # Case: Specific Authorized Site Selected
+        # We only want mutes that are Global OR are for this specific site.
+        ignored_patterns_query = db.query(IgnoredEvent).filter(
             (IgnoredEvent.site_id.is_(None)) | 
             (IgnoredEvent.site_id == formatted_site_id)
+        )
+    else:
+        # Case: All Sites Selected
+        # We want mutes that are Global OR are for ANY of the user's sites.
+        ignored_patterns_query = db.query(IgnoredEvent).filter(
+            (IgnoredEvent.site_id.is_(None)) | 
+            (IgnoredEvent.site_id.in_(user_website_ids))
         )
 
     ignored_patterns_query = ignored_patterns_query.all()
@@ -153,8 +154,6 @@ def get_stats(
 
     summary = []
     for g in grouped:
-        # This logic now leverages the user_website_ids list created earlier!
-        
         # 1. Start by querying EventLabel
         label_query = db.query(EventLabel) 
         
@@ -164,20 +163,19 @@ def get_stats(
             EventLabel.original_text == g.text
         )
         
-        # 3. CRITICAL SECURITY FILTER: Ensure the label is either global OR belongs to the user
-        label_query = label_query.filter(
-            # Only include global labels
-            (EventLabel.site_id.is_(None)) | 
-            # OR labels that belong to one of the user's sites
-            (EventLabel.site_id.in_(user_website_ids))
-        )
-        
-        # 4. Apply site-specific filtering if a site is selected
         if formatted_site_id:
-            # If a specific site is selected, we only want global OR that single site's labels
+            # Case: Specific Authorized Site Selected
+            # We only want labels that are Global OR are for this specific site.
             label_query = label_query.filter(
                 (EventLabel.site_id.is_(None)) | 
                 (EventLabel.site_id == formatted_site_id)
+            )
+        else:
+            # Case: All Sites Selected
+            # We want labels that are Global OR are for ANY of the user's sites.
+            label_query = label_query.filter(
+                (EventLabel.site_id.is_(None)) | 
+                (EventLabel.site_id.in_(user_website_ids))
             )
 
         label = label_query.first()
