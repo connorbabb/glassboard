@@ -15,50 +15,69 @@ from uuid import UUID as py_UUID # Import the standard Python UUID type
 
 router = APIRouter(prefix="/stats", tags=["Stats"])
 
+# In backend/routers/stats.py
+
 @router.get("")
 def get_stats(
     site_id: str = Query(None), 
     db: Session = Depends(get_db),
-    # 🚨 ADD DEPENDENCY HERE
-    user = Depends(get_current_user) 
+    user = Depends(get_current_user)  # The logged-in User object
 ):
     now = datetime.utcnow()
     
+    # -----------------------------------------------------------------
+    # --- 1. SET UP BASE QUERY FILTERING ---
+    # -----------------------------------------------------------------
+
+    # Start with a query that ONLY includes events for websites owned by the current user.
+    # We join Event -> Website -> User
+    base_query_unfiltered = db.query(Event).join(Website).filter(
+        Website.owner == user
+    )
+
     formatted_site_id = None
     if site_id:
         try:
-            formatted_site_id = str(py_UUID(site_id)) 
+            formatted_site_id = str(py_UUID(site_id))
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid site_id format provided.")
 
-        # =====================================================================
-        # 🚨 IDOR FIX: CHECK WEBSITE OWNERSHIP (This logic uses the 'user' object)
-        # =====================================================================
+        # IDOR FIX (Still Necessary): Check if the selected site belongs to the user
         website = db.query(Website).filter(
             Website.id == formatted_site_id
         ).first()
 
         if not website or website.owner != user:
-            # IMPORTANT: Use 404 to avoid leaking site existence to unauthorized users
+            # This handles the case where a user tries to access a specific site they don't own.
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, 
                 detail="Website not found or access denied."
             )
-
-
-    # --- REUSABLE BASE QUERY (Filtered ONLY by site_id) ---
-    base_query_unfiltered = db.query(Event)
+            
+        # If site_id is valid AND belongs to the user, we filter the events by it
+        base_query_unfiltered = base_query_unfiltered.filter(
+            Event.site_id == formatted_site_id
+        )
     
-    # NOTE: Change site_id to formatted_site_id in the filter!
-    if formatted_site_id: 
-        # Check if the column type is UUID, it will handle the comparison correctly with the string
-        base_query_unfiltered = base_query_unfiltered.filter(Event.site_id == formatted_site_id)
-        
-    # ... (Continue using formatted_site_id in the IgnoredEvent query as well)
-    ignored_patterns_query = db.query(IgnoredEvent).filter(
-        # NOTE: Change site_id to formatted_site_id!
-        (IgnoredEvent.site_id == formatted_site_id) | (IgnoredEvent.site_id.is_(None)) 
-    ).all()
+    # NOTE: If site_id is None (All Sites), the base_query_unfiltered already restricts 
+    # to events only for sites belonging to the current user (due to the initial join/filter).
+    
+    # -----------------------------------------------------------------
+    # --- 2. CONTINUE WITH IGNORED EVENTS / BASE QUERY FILTERED ---
+    # -----------------------------------------------------------------
+    
+    # Now, the ignored_patterns_query must also be scoped to the user's sites or global
+    ignored_patterns_query = db.query(IgnoredEvent).join(Website, isouter=True).filter(
+        (IgnoredEvent.site_id.is_(None)) | # Global ignored events
+        (Website.owner == user)           # Ignored events for the user's sites
+    )
+    if formatted_site_id:
+        ignored_patterns_query = ignored_patterns_query.filter(
+            IgnoredEvent.site_id == formatted_site_id
+        )
+    
+    ignored_patterns_query = ignored_patterns_query.all()
+    # ... rest of the function (ignored_tuples, base_query_filtered, etc.)
     
     # Convert ignored patterns to a list of tuples for exclusion filtering
     ignored_tuples = [(i.element.lower(), i.original_text.lower()) for i in ignored_patterns_query]
