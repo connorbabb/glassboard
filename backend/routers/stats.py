@@ -17,6 +17,8 @@ router = APIRouter(prefix="/stats", tags=["Stats"])
 
 # In backend/routers/stats.py
 
+# In backend/routers/stats.py (inside get_stats)
+
 @router.get("")
 def get_stats(
     site_id: str = Query(None), 
@@ -26,69 +28,71 @@ def get_stats(
     now = datetime.utcnow()
     
     # -----------------------------------------------------------------
-    # --- 1. SET UP BASE QUERY FILTERING ---
+    # --- 1. SET UP SECURE BASE QUERY AND IDOR CHECK ---
     # -----------------------------------------------------------------
 
-    # Start with a query that ONLY includes events for websites owned by the current user.
-    # We join Event -> Website -> User
+    # **STEP 1: Start with the most secure, user-scoped query.**
+    # This query ensures ALL subsequent steps are limited to the user's data.
+    # Use Website.owner_id == user.id for maximum robustness.
+    # If the user has no sites, this returns an empty set of Events.
     base_query_unfiltered = db.query(Event).join(Website).filter(
-        Website.owner == user
+        Website.owner_id == user.id
     )
 
     formatted_site_id = None
+    
     if site_id:
         try:
             formatted_site_id = str(py_UUID(site_id))
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid site_id format provided.")
 
-        # IDOR FIX (Still Necessary): Check if the selected site belongs to the user
+        # **STEP 2: IDOR Check (Required for site_id)**
         website = db.query(Website).filter(
             Website.id == formatted_site_id
         ).first()
 
-        if not website or website.owner != user:
-            # This handles the case where a user tries to access a specific site they don't own.
+        if not website or website.owner_id != user.id: # Note: Use .owner_id here too
+            # This handles unauthorized access to a specific site.
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, 
                 detail="Website not found or access denied."
             )
             
-        # If site_id is valid AND belongs to the user, we filter the events by it
-        # In backend/routers/stats.py (inside get_stats)
-        base_query_unfiltered = db.query(Event).join(Website).filter(
-            Website.owner == user.id
+        # **STEP 3: Apply site_id filter to the already secure query.**
+        base_query_unfiltered = base_query_unfiltered.filter(
+            Event.site_id == formatted_site_id
         )
     
-    # NOTE: If site_id is None (All Sites), the base_query_unfiltered already restricts 
-    # to events only for sites belonging to the current user (due to the initial join/filter).
-    
+    # At this point, base_query_unfiltered is GUARANTEED to be:
+    # A) All events for all user's sites (if site_id is None) OR
+    # B) All events for the single, authorized site (if site_id is present).
+
     # -----------------------------------------------------------------
     # --- 2. CONTINUE WITH IGNORED EVENTS / BASE QUERY FILTERED ---
     # -----------------------------------------------------------------
     
-    # Now, the ignored_patterns_query must also be scoped to the user's sites or global
+    # You must also fix the IgnoredEvent query to use owner_id
     ignored_patterns_query = db.query(IgnoredEvent).join(Website, isouter=True).filter(
-        (IgnoredEvent.site_id.is_(None)) | # Global ignored events
-        (Website.owner == user)           # Ignored events for the user's sites
+        (IgnoredEvent.site_id.is_(None)) |      # Global ignored events
+        (Website.owner_id == user.id)           # Ignored events for the user's sites
     )
+    # ... (rest of ignored_patterns_query block is fine)
+    
     if formatted_site_id:
         ignored_patterns_query = ignored_patterns_query.filter(
             IgnoredEvent.site_id == formatted_site_id
         )
     
     ignored_patterns_query = ignored_patterns_query.all()
-    # ... rest of the function (ignored_tuples, base_query_filtered, etc.)
     
     # Convert ignored patterns to a list of tuples for exclusion filtering
     ignored_tuples = [(i.element.lower(), i.original_text.lower()) for i in ignored_patterns_query]
 
-    # --- REUSABLE BASE QUERY (Filtered ONLY by site_id) ---
-    base_query_unfiltered = db.query(Event)
-    if site_id:
-        base_query_unfiltered = base_query_unfiltered.filter(Event.site_id == site_id)
+    # **CRITICAL: Remove the entire block that starts with `base_query_unfiltered = db.query(Event)`**
+    # The variable is already correctly filtered from Step 1!
 
-    base_query_filtered = base_query_unfiltered
+    base_query_filtered = base_query_unfiltered # Start applying the ignored filter here
 
     if ignored_tuples:
         # Create a list of tuples of (element, text) to exclude
@@ -97,6 +101,7 @@ def get_stats(
         )
         base_query_filtered = base_query_filtered.filter(exclusion_filter)
 
+    # ... The rest of the function (Aggregation) now uses the SECURE `base_query_filtered`
     # =========================================================================
     # --- 1. CLICK AGGREGATION ---
     # =========================================================================
