@@ -489,3 +489,45 @@ def mute_event(
     
     db.commit()
     return {"status": "ok", "action": action}
+
+# Insert this new route anywhere in the file (e.g., just before /label)
+@router.delete("/cleanup_stale_data")
+def cleanup_stale_data(db: Session = Depends(get_db)):
+    """
+    Deletes IgnoredEvent and EventLabel records that refer to non-existent sites.
+    (This is typically run by an admin/owner but is crucial for fixing pre-IDOR-fix data.)
+    """
+    
+    # 1. Get all current, valid site IDs from the Website table
+    valid_site_ids = db.query(Website.id).all()
+    # Convert list of tuples to a flat list of UUIDs
+    valid_site_ids = [id[0] for id in valid_site_ids] 
+    
+    # --- Cleanup IgnoredEvents (Mutes) ---
+    
+    # Identify records that have a site_id but that site_id is NOT in the list of valid sites
+    stale_mutes_query = db.query(IgnoredEvent).filter(
+        IgnoredEvent.site_id.isnot(None),
+        IgnoredEvent.site_id.notin_(valid_site_ids)
+    )
+    
+    deleted_mutes_count = stale_mutes_query.delete(synchronize_session=False)
+
+    # --- Cleanup EventLabels (Nicknames) ---
+
+    # Identify records that have a site_id but that site_id is NOT in the list of valid sites
+    stale_labels_query = db.query(EventLabel).filter(
+        EventLabel.site_id.isnot(None),
+        EventLabel.site_id.notin_(valid_site_ids)
+    )
+
+    deleted_labels_count = stale_labels_query.delete(synchronize_session=False)
+
+    db.commit()
+    
+    return {
+        "status": "ok", 
+        "message": "Stale data cleanup complete.",
+        "deleted_ignored_events": deleted_mutes_count,
+        "deleted_event_labels": deleted_labels_count
+    }
