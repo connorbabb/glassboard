@@ -72,18 +72,26 @@ def get_stats(
     # --- 2. CONTINUE WITH IGNORED EVENTS / BASE QUERY FILTERED ---
     # -----------------------------------------------------------------
     
-    # You must also fix the IgnoredEvent query to use owner_id
-    ignored_patterns_query = db.query(IgnoredEvent).join(Website, isouter=True).filter(
-        (IgnoredEvent.site_id.is_(None)) |      # Global ignored events
-        (Website.user_id == user.id)           # Ignored events for the user's sites
+    # Build a list of Website IDs owned by the current user.
+    user_website_ids = db.query(Website.id).filter(Website.user_id == user.id).all()
+    user_website_ids = [str(id[0]) for id in user_website_ids] # Convert to list of UUID strings
+
+    # 🎯 CRITICAL FIX: The IgnoredEvent must be either global (NULL) 
+    # OR its site_id must be in the list of sites owned by the user.
+    ignored_patterns_query = db.query(IgnoredEvent).filter(
+        # Only include global mutes
+        (IgnoredEvent.site_id.is_(None)) | 
+        # OR mutes that belong to one of the user's sites
+        (IgnoredEvent.site_id.in_(user_website_ids))
     )
-    # ... (rest of ignored_patterns_query block is fine)
     
     if formatted_site_id:
+        # If a specific site is selected, we only want global OR that single site's mutes
         ignored_patterns_query = ignored_patterns_query.filter(
-            IgnoredEvent.site_id == formatted_site_id
+            (IgnoredEvent.site_id.is_(None)) | 
+            (IgnoredEvent.site_id == formatted_site_id)
         )
-    
+
     ignored_patterns_query = ignored_patterns_query.all()
     
     # Convert ignored patterns to a list of tuples for exclusion filtering
@@ -147,9 +155,10 @@ def get_stats(
 
     summary = []
     for g in grouped:
+        # This logic now leverages the user_website_ids list created earlier!
         
-        # 1. Start by querying EventLabel and joining it to Website
-        label_query = db.query(EventLabel).join(Website, isouter=True) 
+        # 1. Start by querying EventLabel
+        label_query = db.query(EventLabel) 
         
         # 2. Filter by the element and text
         label_query = label_query.filter(
@@ -159,21 +168,19 @@ def get_stats(
         
         # 3. CRITICAL SECURITY FILTER: Ensure the label is either global OR belongs to the user
         label_query = label_query.filter(
+            # Only include global labels
             (EventLabel.site_id.is_(None)) | 
-            # ✅ FIX: Use Website.user_id to restrict labels to the current user's sites
-            (Website.user_id == user.id)
+            # OR labels that belong to one of the user's sites
+            (EventLabel.site_id.in_(user_website_ids))
         )
         
         # 4. Apply site-specific filtering if a site is selected
-        if site_id:
-            # If a specific site is selected, only look for labels for that site (or global)
+        if formatted_site_id:
+            # If a specific site is selected, we only want global OR that single site's labels
             label_query = label_query.filter(
-                EventLabel.site_id == formatted_site_id
+                (EventLabel.site_id.is_(None)) | 
+                (EventLabel.site_id == formatted_site_id)
             )
-        else:
-            # If "All Sites" is selected, only look for global labels (site_id is NULL)
-            # OR labels tied to any of the user's sites (already covered by the join/filter in step 3).
-            pass
 
         label = label_query.first()
         
