@@ -52,22 +52,16 @@ def get_stats(
     
     # --- 2. IGNORED EVENTS (MUTES) ---
     
-    # Build list of User's Website IDs
     user_website_ids = db.query(Website.id).filter(Website.user_id == user.id).all()
     user_website_ids = [id[0] for id in user_website_ids]
 
-    # 🚨 FIX: REMOVED 'IgnoredEvent.site_id.is_(None)'
-    # We ONLY load mutes that belong to the user's specific sites.
-    # This prevents User A's global mute from leaking to User B.
-    
+    # We ONLY load mutes that belong to the user's specific sites.    
     if formatted_site_id:
-        # Case: Specific Site Selected -> Only load mutes for this site
         ignored_patterns_query = db.query(IgnoredEvent).filter(
             IgnoredEvent.site_id == formatted_site_id
         )
     else:
         # Case: All Sites Selected -> Only load mutes for ANY of the user's sites
-        # If user has no sites, this list is empty, and that's correct.
         ignored_patterns_query = db.query(IgnoredEvent).filter(
             IgnoredEvent.site_id.in_(user_website_ids)
         )
@@ -76,7 +70,6 @@ def get_stats(
     
     ignored_tuples = [(i.element.lower(), i.original_text.lower()) for i in ignored_patterns_query]
 
-    # Apply Mute Filter
     base_query_filtered = base_query_unfiltered
     if ignored_tuples:
         exclusion_filter = (
@@ -122,7 +115,6 @@ def get_stats(
 
     summary = []
     for g in grouped:
-        # 🚨 FIX: Same logic for Labels - REMOVED global lookup
         label_query = db.query(EventLabel).filter(
             EventLabel.element == g.element,
             EventLabel.original_text == g.text
@@ -167,13 +159,11 @@ def get_stats(
         "summary": summary,
     }
 
-# ---------------- EXPORT ROUTES (Apply same filtering logic) ----------------
+# EXPORT ROUTES (Applies same filtering logic)
 @router.get("/export/csv")
 def export_csv(site_id: str = Query(None), db: Session = Depends(get_db), user = Depends(get_current_user)):
-    # 1. Base Security
     base_query = db.query(Event).join(Website).filter(Website.user_id == user.id)
     
-    # 2. Site ID Filtering
     if site_id:
         base_query = base_query.filter(Event.site_id == site_id)
 
@@ -211,18 +201,16 @@ def export_pdf(site_id: str = Query(None), db: Session = Depends(get_db), user =
     filename = f"events_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.pdf"
     return Response(content=pdf, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename={filename}"})
 
-# ---------------- UPDATE LABEL & MUTE (CREATION) ----------------
+# UPDATE LABEL & MUTE (CREATION)
 
 class LabelUpdate(BaseModel):
-    site_id: str # 🚨 CHANGED: Made required (removed Optional)
+    site_id: str
     element: str
     original_text: str
     custom_text: str
 
 @router.post("/label")
 def update_label(payload: LabelUpdate, db: Session = Depends(get_db), user = Depends(get_current_user)):
-    
-    # 🚨 SECURITY FIX: Require valid site_id owned by user
     try:
         formatted_site_id = py_UUID(payload.site_id)
     except ValueError:
@@ -248,14 +236,12 @@ def update_label(payload: LabelUpdate, db: Session = Depends(get_db), user = Dep
     return {"status": "ok", "custom_text": payload.custom_text}
 
 class EventMute(BaseModel):
-    site_id: str # 🚨 CHANGED: Made required (removed Optional)
+    site_id: str
     element: str
     original_text: str
 
 @router.post("/mute_event")
 def mute_event(payload: EventMute, db: Session = Depends(get_db), user = Depends(get_current_user)):
-    
-    # 🚨 SECURITY FIX: Require valid site_id owned by user. Global mutes (None) are disabled.
     try:
         formatted_site_id = py_UUID(payload.site_id)
     except ValueError:
@@ -286,10 +272,6 @@ def cleanup_stale_data(db: Session = Depends(get_db), user = Depends(get_current
     # Delete records with invalid site_ids
     db.query(IgnoredEvent).filter(IgnoredEvent.site_id.isnot(None), IgnoredEvent.site_id.notin_(valid_site_ids)).delete(synchronize_session=False)
     db.query(EventLabel).filter(EventLabel.site_id.isnot(None), EventLabel.site_id.notin_(valid_site_ids)).delete(synchronize_session=False)
-    
-    # 🚨 ALSO DELETE GLOBAL ORPHANS (optional, but recommended if you want to purge old leakage)
-    # db.query(IgnoredEvent).filter(IgnoredEvent.site_id.is_(None)).delete(synchronize_session=False)
-    # db.query(EventLabel).filter(EventLabel.site_id.is_(None)).delete(synchronize_session=False)
 
     db.commit()
     return {"status": "ok", "message": "Cleanup complete"}

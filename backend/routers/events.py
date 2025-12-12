@@ -1,6 +1,4 @@
-# In backend/routers/events.py
-
-from fastapi import APIRouter, Depends, HTTPException # <-- Added HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -28,8 +26,6 @@ async def record_single_event(payload: IncomingEvent, db: Session = Depends(get_
     """
     Handles a single event payload sent directly from the JS snippet.
     """
-    
-    # 🚨 FIX 1: FORMAT THE SITE_ID STRING TO A HYPHENATED UUID OBJECT
     try:
         # The py_UUID(payload.site_id) constructor correctly formats the 32-char hex string
         # into the required hyphenated UUID object (e.g., 'xxxxxxxx-xxxx-...' )

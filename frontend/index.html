@@ -13,7 +13,6 @@
   <header class="main-header">
     <h1>Glassboard Analytics</h1>
   </header>
-
     <div class="top-controls">
     <select id="siteSelect">
       <option value="">All Sites</option>
@@ -26,9 +25,7 @@
       <button id="logoutBtn">Logout</button>
     </div>
   </div>
-
     <div class="dashboard-content">
-
         <div class="stats-container flex-row">
         <div class="card">
             <h2>Total Clicks: <span id="totalClicks">0</span></h2>
@@ -40,7 +37,6 @@
               <li>Past Year: <span id="yearClicks">0</span></li>
             </ul>
         </div>
-
         <div class="card">
             <h2>Total Page Visits: <span id="totalVisits">0</span></h2>
             <h3>Aggregated Visits</h3>
@@ -52,67 +48,60 @@
             </ul>
         </div>
     </div>
-
-        <div class="card chart-card">
-      <h2>Top Elements (Chart)</h2>
-      
-      <label for="summaryRange"><strong>Show:</strong></label>
-      <select id="summaryRange">
-        <option value="all">All Time</option>
-        <option value="day">Past Day</option>
-        <option value="week">Past Week</option>
-        <option value="month">Past Month</option>
-        <option value="year">Past Year</option>
-      </select>
-
-      <div class="chart-container">
-        <canvas id="topChart"></canvas>
+      <div class="card chart-card">
+        <h2>Top Elements (Chart)</h2>
+        <label for="summaryRange"><strong>Show:</strong></label>
+        <select id="summaryRange">
+          <option value="all">All Time</option>
+          <option value="day">Past Day</option>
+          <option value="week">Past Week</option>
+          <option value="month">Past Month</option>
+          <option value="year">Past Year</option>
+        </select>
+        <div class="chart-container">
+          <canvas id="topChart"></canvas>
+        </div>
+          <ul id="topLabels"></ul>
       </div>
-
-            <ul id="topLabels">
-              </ul>
+  </div>     
+    <div class="flex-row">
+      <div class="card summary">
+        <h2>Referrer Sources</h2>
+        <ul id="referrerList"></ul>
+      </div>
+      <div class="card summary">
+        <h2>All Recorded Events</h2>
+        <ul id="all"></ul>
+      </div>
     </div>
-
-  </div>     <div class="flex-row">
-    <div class="card summary">
-      <h2>Referrer Sources</h2>
-      <ul id="referrerList"></ul>
-    </div>
-
-    <div class="card summary">
-      <h2>All Recorded Events</h2>
-      <ul id="all"></ul>
-    </div>
-  </div>
-
 
     <div class="card">
-    <h2>Register a New Website</h2>
-    <form id="registerWebsiteForm">
-      <input type="text" id="websiteName" placeholder="Website Name (optional)">
-      <input type="text" id="websiteDomain" placeholder="Website Domain" required>
-      <button type="submit">Register Website</button>
-    </form>
-    <div id="snippetOutput" style="display:none; margin-top: 1rem;">
-      <p>Copy this snippet and paste it into your website:</p>
-      <textarea id="snippetText" readonly style="width:100%; height:100px;"></textarea>
+      <h2>Register a New Website</h2>
+      <form id="registerWebsiteForm">
+        <input type="text" id="websiteName" placeholder="Website Name (optional)">
+        <input type="text" id="websiteDomain" placeholder="Website Domain" required>
+        <button type="submit">Register Website</button>
+      </form>
+      <div id="snippetOutput" style="display:none; margin-top: 1rem;">
+        <p>Copy this snippet and paste it into your website:</p>
+        <textarea id="snippetText" readonly style="width:100%; height:100px;"></textarea>
+      </div>
     </div>
-  </div>
 
-  <div class="card delete-website-card">
-    <h3>Permanently Delete Website</h3>
-    <p>To delete a website and **ALL** its historical data, enter its exact Name or Domain below.</p>
-    <div class="input-group">
-        <input type="text" id="websiteIdentifierInput" placeholder="Enter Website Name or Domain" required>
-        <button id="deleteWebsiteButton" class="btn btn-danger">Delete Website</button>
+    <div class="card delete-website-card">
+      <h2>Permanently Delete Website</h2>
+      <p>To delete a website and **ALL** its historical data, enter its exact Name or Domain below.</p>
+      <div class="input-group">
+          <input type="text" id="websiteIdentifierInput" placeholder="Enter Website Name or Domain" required>
+          <button id="deleteWebsiteButton" class="btn btn-danger">Delete Website</button>
+      </div>
+      <div id="deleteStatusMessage" style="margin-top: 10px; font-weight: bold;"></div>
     </div>
-    <div id="deleteStatusMessage" style="margin-top: 10px; font-weight: bold;"></div>
-  </div>
 
-  <div style="text-align: center; margin-top: 1rem;">
-    <button id="resetButton">Reset All Events</button>
-  </div>
+    <div style="text-align: center; margin-top: 1rem;">
+      <button id="resetButton">Reset All Events</button>
+    </div>
 
-  <script src="dashboard.js"></script>
-</body>
+    <script src="dashboard.js"></script>
+  </body>
 </html>

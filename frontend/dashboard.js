@@ -362,7 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// --- NEW DELETION EVENT LISTENER (Add this to dashboard.js) ---
 document.getElementById("deleteWebsiteButton").addEventListener("click", () => {
     const identifierInput = document.getElementById("websiteIdentifierInput");
     const identifier = identifierInput.value.trim();
@@ -405,8 +404,6 @@ function renderAllEvents(clicks, visits) {
         const date = new Date(event.timestamp).toLocaleDateString();
 
         let eventDetail = '';
-        
-        // --- FINAL, CORRECTED NAMING CHECK ---
         
         // Use the presence of the 'element' field to distinguish click from page_view
         if (event.element) { 

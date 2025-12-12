@@ -25,7 +25,6 @@ h2, h1 {
     color: var(--text-color);
 }
 
-/* Base Card Styling */
 .card {
     background: var(--card-bg);
     padding: 1rem 1.25rem;
@@ -33,10 +32,9 @@ h2, h1 {
     border-radius: 12px;
     box-shadow: 0 2px 8px var(--shadow);
     backdrop-filter: blur(8px);
-    box-sizing: border-box; /* Essential for flex/grid layouts */
+    box-sizing: border-box;
 }
 
-/* List Styling */
 ul {
     list-style: none;
     padding-left: 0;
@@ -51,7 +49,6 @@ li {
     color: var(--text-color);
 }
 
-/* Form Elements Styling */
 select, button {
     background-color: var(--secondary);
     color: var(--main);
@@ -62,26 +59,16 @@ select, button {
     font-weight: 600;
     font-size: 1rem;
     appearance: none;
-    /* Ensures buttons and selects line up in flex containers */
     height: fit-content;
 }
 
 select:hover, button:hover {
-    background-color: var(--secondary-hover); /* Changed to use the hover variable for visual feedback */
-}
-
-/* Makes the dropdown arrow visible and styled */
-select {
-    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'><polygon points='0,0 14,0 7,10' fill='white'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 12px;
-    padding-right: 2rem;
+    background-color: var(--secondary-hover);
 }
 
 input[type="text"],
 input[type="password"],
-textarea { /* Added textarea for consistency */
+textarea {
     background-color: var(--main);
     color: var(--text-color);
     border: 1px solid #ccc;
@@ -92,15 +79,12 @@ textarea { /* Added textarea for consistency */
     box-sizing: border-box;
 }
 
-/* --- Layout Classes --- */
-
-/* Top Controls Section (Site Select and Action Buttons) */
 .top-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
-    flex-wrap: wrap; /* Allows wrap on smaller screens */
+    flex-wrap: wrap;
     gap: 1rem;
 }
 
@@ -109,13 +93,12 @@ textarea { /* Added textarea for consistency */
     gap: 10px;
 }
 
-/* Reusable Flex Row for side-by-side elements */
 .flex-row {
   display: flex;
   justify-content: space-between;
-  align-items: stretch; /* Cards will be the same height */
+  align-items: stretch;
   gap: 1rem;
-  margin-bottom: 1rem; /* Added margin for separation */
+  margin-bottom: 1rem;
 }
 
 .flex-row .card {
@@ -123,13 +106,11 @@ textarea { /* Added textarea for consistency */
   min-width: 0;
 }
 
-/* Stats Container Styling */
 .stats-container h2 {
   margin-top: 0;
   margin-bottom: 0.5rem;
 }
 
-/* Chart Card Styling */
 .chart-card {
     width: 100%;
     margin-bottom: 1rem;
@@ -146,7 +127,6 @@ textarea { /* Added textarea for consistency */
   height: 100% !important;
 }
 
-/* Delete Website Input Group */
 .input-group {
     display: flex;
     gap: 10px;
@@ -157,29 +137,22 @@ textarea { /* Added textarea for consistency */
     flex-grow: 1;
 }
 
-.delete-website-card h3 {
-    color: var(--text-color); /* This explicitly forces the heading to be black */
-}
-
-/* 1a. Highlight the aggregated numbers (0, 10, etc.) */
 .stats-container li span {
     font-weight: 700;
-    font-size: 1.1em; /* Slightly larger than surrounding text */
-    color: var(--secondary); /* Optional: use the blue color for key numbers */
+    font-size: 1.2em;
+    color: var(--secondary);
 }
 
-/* 1b. Use a softer background for the inner lists */
 li {
     padding: 6px 10px;
-    background: var(--muted-bg); /* Change from var(--main) to the defined muted gray */
+    background: var(--muted-bg);
     margin-bottom: 6px;
     border-radius: 6px;
     color: var(--text-color);
 }
 
-/* 2a. Make the 'Delete' button stand out (using Water.css conventions) */
 .btn-danger {
-    background-color: #e53e3e; /* Standard red for danger/delete */
+    background-color: #e53e3e;
     color: var(--main);
 }
 
@@ -187,18 +160,16 @@ li {
     background-color: #c53030;
 }
 
-/* 2b. Make form submission buttons more prominent (Register) */
 #registerWebsiteForm button[type="submit"] {
-    padding: 0.8rem 1.5rem; /* Slightly larger padding */
-    font-size: 1.1rem; /* Slightly larger text */
-    margin-top: 10px; /* Space from input fields */
-    width: 100%; /* Make it full width in the form context */
+    padding: 0.8rem 1.5rem;
+    font-size: 1.2rem;
+    margin-top: 10px;
+    width: 100%;
 }
 
-/* 3. Style the snippet output area */
 #snippetText {
     font-family: monospace;
     background-color: var(--muted-bg);
-    border: 1px dashed var(--text-color); /* Use a dashed border to look like a copy area */
+    border: 1px dashed var(--text-color);
     padding: 10px;
 }
