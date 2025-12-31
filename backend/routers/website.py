@@ -28,7 +28,7 @@ def register_website(data: dict, db: Session = Depends(get_db), user = Depends(g
     # The UUID object needs to be converted to a string for the URL
     site_uuid_str = str(website.id) 
     
-    snippet = f'<script src="/snippet/{site_uuid_str}.js"></script>'
+    snippet = f'<script src="https://glassboard-hjhr.onrender.com/snippet/{site_uuid_str}.js"></script>'
     
     return {"site_id": site_uuid_str, "snippet": snippet}
 
