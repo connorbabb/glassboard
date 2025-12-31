@@ -5,8 +5,8 @@ from fastapi.responses import RedirectResponse
 from passlib.context import CryptContext
 import secrets
 
-from .models import User
-from .database import get_db
+from models import User
+from database import get_db
 
 router = APIRouter()
 
