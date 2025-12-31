@@ -6,17 +6,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
-from .auth import get_current_user
+from auth import get_current_user
 
-from .routers import events, stats, website
-from .models import Base, User
-from .database import engine, get_db
+from routers import events, stats, website
+from models import Base, User
+from database import engine, get_db
 from sqlalchemy import text
 
 import os
 
-from .auth import router as auth_router
-from .routers.website import router as website_router
+from auth import router as auth_router
+from routers.website import router as website_router
 
 
 # Create tables
