@@ -31,7 +31,7 @@
       e.preventDefault();
 
       const formData = new FormData(form);
-      const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/login", {
+      const res = await fetch("/login", {
         method: "POST",
         body: formData,
         credentials: "include" // needed for cookies
