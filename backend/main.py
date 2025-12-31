@@ -1,23 +1,19 @@
-# backend/main.py
-
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
 
 from auth import get_current_user
-
-from routers import events, stats, website
-from models import Base, User
+from routers import events, stats
+from models import Base
 from database import engine, get_db
 from sqlalchemy import text
 
 import os
 
+# Import routers - ensuring correct paths
 from auth import router as auth_router
 from routers.website import router as website_router
-
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -25,21 +21,38 @@ Base.metadata.create_all(bind=engine)
 # Create app
 app = FastAPI()
 
-# CORS
+# --- 1. FIXED CORS SETTINGS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://127.0.0.1:5500",  # Local live server
-        "http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com"  # Your EC2 frontend origin
+        "http://127.0.0.1:5500",
+        "https://glassboard-hjhr.onrender.com", # Your Live URL
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Serve frontend
-frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
-# app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+# --- 2. IMPROVED FRONTEND MOUNTING ---
+# We are checking two common locations where Render might put the folder
+current_dir = os.path.dirname(os.path.abspath(__file__)) # /backend
+parent_dir = os.path.dirname(current_dir)                # / (root)
+
+# Location 1: /frontend (sibling to backend)
+path_option_1 = os.path.join(parent_dir, "frontend")
+# Location 2: /backend/frontend (inside backend)
+path_option_2 = os.path.join(current_dir, "frontend")
+
+if os.path.exists(path_option_1):
+    print(f"DEBUG: Found frontend at {path_option_1}")
+    app.mount("/frontend", StaticFiles(directory=path_option_1), name="frontend")
+elif os.path.exists(path_option_2):
+    print(f"DEBUG: Found frontend at {path_option_2}")
+    app.mount("/frontend", StaticFiles(directory=path_option_2), name="frontend")
+else:
+    # This will print in your Render logs so we can see the actual path
+    print(f"DEBUG: Frontend NOT found. Looked in: {path_option_1} and {path_option_2}")
+    print(f"DEBUG: Files in root: {os.listdir(parent_dir)}")
 
 # API routers
 app.include_router(events.router)
@@ -49,30 +62,25 @@ app.include_router(auth_router)
 
 @app.get("/")
 def root():
+    # Redirect to the login page in the frontend folder
     return RedirectResponse(url="/frontend/login.html")
 
-
-# backend/main.py (Only the updated tracking_snippet function)
-
+# --- 3. FIXED TRACKING SNIPPET URL ---
 @app.get("/snippet/{site_id}.js", response_class=PlainTextResponse)
 def tracking_snippet(site_id: str):
-    # This snippet is the final, working JavaScript code.
+    # This snippet now points to your LIVE Render backend
     js_code = f"""
         (function() {{
-            const SITE_ID = "{site_id}"; // Substituted by Python
-            // We use the full, fixed endpoint URL here.
-            const TRACKING_ENDPOINT = 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/track/'; 
+            const SITE_ID = "{site_id}";
+            const TRACKING_ENDPOINT = 'https://glassboard-hjhr.onrender.com/track/'; 
 
-            // 1. CORE EVENT SENDER FUNCTION (Sends single, flat payload to /track)
             function sendEvent(eventType, elementDetails = {{}}) {{
                 const payload = {{
                     site_id: SITE_ID,
-                    event_type: eventType, // CRITICAL: 'page_view' or 'click'
+                    event_type: eventType,
                     timestamp: new Date().toISOString(),
                     page: window.location.pathname,
                     referrer: document.referrer || null,
-                    
-                    // Click-specific fields
                     element: elementDetails.element || null,
                     text: elementDetails.text || null,
                     href: elementDetails.href || null,
@@ -81,21 +89,16 @@ def tracking_snippet(site_id: str):
                 fetch(TRACKING_ENDPOINT, {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
-                    body: JSON.stringify(payload), // Send single, flat payload
+                    body: JSON.stringify(payload),
                 }})
                 .then(res => res.json())
                 .catch(err => console.error("Glassboard Tracking failed:", err));
             }}
 
-            // 2. PAGE VIEW TRACKING (NEW)
             sendEvent('page_view');
 
-
-            // 3. CLICK TRACKING (UPDATED)
             document.addEventListener("click", (e) => {{
                 let element = e.target;
-                
-                // Traverse up the DOM to find the button or link
                 while (element && element.tagName !== 'BUTTON' && element.tagName !== 'A' && element.tagName !== 'BODY') {{
                     element = element.parentElement;
                 }}
@@ -106,15 +109,12 @@ def tracking_snippet(site_id: str):
                         text: element.innerText.substring(0, 100).trim() || element.getAttribute('aria-label') || 'N/A',
                         href: element.tagName === 'A' ? element.getAttribute('href') : null
                     }};
-                    
-                    // Send the 'click' event using the unified sender
                     sendEvent('click', details);
                 }}
             }});
         }})();
         """
     return js_code
-
 
 @app.get("/test-db")
 def test_db():
