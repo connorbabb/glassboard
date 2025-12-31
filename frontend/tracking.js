@@ -5,7 +5,7 @@
 
 (() => {
     // 1. CONFIGURATION (Placeholder must be replaced by your backend)
-    const BACKEND_URL = "http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/track";
+    const BACKEND_URL = "https://glassboard-hjhr.onrender.com/track";
     // This MUST be substituted with the user's unique ID by your FastAPI register endpoint
     const SITE_ID = 'YOUR_UNIQUE_SITE_ID_HERE'; 
 

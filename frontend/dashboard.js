@@ -13,9 +13,7 @@ const editingElements = new Set();
 
 async function ensureLoggedIn() {
     // IMPORTANT: Make sure this URL is correct for your EC2 instance
-    const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/me", {
-        credentials: "include"
-    });
+    const res = await fetch("/me", { credentials: "include" });
 
     if (res.status !== 200) {
         window.location.href = "/frontend/login.html";
@@ -213,7 +211,7 @@ function renderChart(summaryData) {
 // --- 3. UTILITY FUNCTIONS ---
 
 async function logout() {
-    const res = await fetch("http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000/logout", {
+    const res = await fetch("/logout", {
         method: "POST",
         credentials: "include"
     });
@@ -293,8 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Reset button logic
     document.getElementById("resetButton").addEventListener("click", () => {
-        const BASE_URL = 'http://ec2-44-231-42-67.us-west-2.compute.amazonaws.com:8000';
-        const endpoint = `${BASE_URL}/track/reset`;
+        const endpoint = `/track/reset`;
 
         if (confirm("Are you sure you want to delete ALL tracking data? This cannot be undone.")) {
             fetch(endpoint, { method: 'DELETE' })
