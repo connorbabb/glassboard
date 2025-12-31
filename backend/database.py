@@ -1,18 +1,22 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
-# --- RDS Postgres configuration ---
-RDS_HOST = "glassboard-rds.c1ymcqk8mlq7.us-west-2.rds.amazonaws.com"
-RDS_DB = "glassboard-rds"
-RDS_USER = "adminuser"
-RDS_PASSWORD = "BlueSpartan03!"
-RDS_PORT = 5432
+# Load variables from a .env file
+load_dotenv()
 
-DATABASE_URL = f"postgresql+psycopg2://{RDS_USER}:{RDS_PASSWORD}@{RDS_HOST}:{RDS_PORT}/glassboard"
+# Get the URL from Neon (looks like: postgresql://user:pass@ep-name.us-east-2.aws.neon.tech/neondb)
+# IMPORTANT: Append ?sslmode=require if it isn't already there
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Create the engine
+# 'pool_recycle' and 'pool_pre_ping' help manage connections to serverless DBs like Neon
 engine = create_engine(
-    DATABASE_URL, 
+    DATABASE_URL,
+    pool_recycle=300,
+    pool_pre_ping=True,
     echo=False
 )
 

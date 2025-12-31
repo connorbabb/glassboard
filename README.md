@@ -149,6 +149,8 @@ python db_test.py
 ```
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
+uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+
 nohup uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
 ```
 6. While running, test these links:
