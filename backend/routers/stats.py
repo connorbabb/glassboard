@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, Query, Response, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from sqlalchemy.sql import tuple_
-from ..database import get_db
-from ..models import Event, EventLabel, IgnoredEvent, Website
-from ..auth import get_current_user
+from database import get_db
+from models import Event, EventLabel, IgnoredEvent, Website
+from auth import get_current_user
 import csv
 import io
 from weasyprint import HTML

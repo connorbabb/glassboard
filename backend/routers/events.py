@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from ..database import get_db
-from ..models import Event
+from database import get_db
+from models import Event
 from datetime import datetime
 from uuid import UUID as py_UUID # Standard Python UUID library
 
