@@ -33,26 +33,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- 2. IMPROVED FRONTEND MOUNTING ---
-# We are checking two common locations where Render might put the folder
-current_dir = os.path.dirname(os.path.abspath(__file__)) # /backend
-parent_dir = os.path.dirname(current_dir)                # / (root)
+# --- 2. Frontend ---
+# Try a few different ways to find the frontend folder
+possible_paths = [
+    os.path.join(os.getcwd(), "frontend"),                # /frontend
+    os.path.join(os.path.dirname(os.getcwd()), "frontend"), # ../frontend
+    "/opt/render/project/src/frontend"                    # Absolute Render path
+]
 
-# Location 1: /frontend (sibling to backend)
-path_option_1 = os.path.join(parent_dir, "frontend")
-# Location 2: /backend/frontend (inside backend)
-path_option_2 = os.path.join(current_dir, "frontend")
+frontend_path = None
+for path in possible_paths:
+    if os.path.exists(path):
+        frontend_path = path
+        print(f"DEBUG: Found frontend at {path}")
+        break
 
-if os.path.exists(path_option_1):
-    print(f"DEBUG: Found frontend at {path_option_1}")
-    app.mount("/frontend", StaticFiles(directory=path_option_1), name="frontend")
-elif os.path.exists(path_option_2):
-    print(f"DEBUG: Found frontend at {path_option_2}")
-    app.mount("/frontend", StaticFiles(directory=path_option_2), name="frontend")
+if frontend_path:
+    app.mount("/frontend", StaticFiles(directory=frontend_path), name="frontend")
 else:
-    # This will print in your Render logs so we can see the actual path
-    print(f"DEBUG: Frontend NOT found. Looked in: {path_option_1} and {path_option_2}")
-    print(f"DEBUG: Files in root: {os.listdir(parent_dir)}")
+    # If all fail, this will show us exactly where we are in the Render logs
+    print(f"DEBUG: Frontend NOT found. Current Dir: {os.getcwd()}")
+    print(f"DEBUG: Files here: {os.listdir(os.getcwd())}")
+    # Also try to look one level up
+    try:
+        print(f"DEBUG: Files one level up: {os.listdir(os.path.dirname(os.getcwd()))}")
+    except:
+        pass
 
 # API routers
 app.include_router(events.router)
